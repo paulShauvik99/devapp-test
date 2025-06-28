@@ -2,6 +2,14 @@ import type { User } from './User';
 import type { Comment } from './Comment';
 
 
+export interface BlogWithUIState extends Blog {
+  isLiked?: boolean // Current user's like status
+}
+
+export interface CommentWithUIState extends Comment {
+  // Any UI-specific comment properties can be added here
+}
+
 export interface Blog {
     id: string;
     title: string;
@@ -60,4 +68,24 @@ export interface BlogStats {
     totalViews: number;
     totalLikes: number;
     totalComments: number;
+}
+
+export interface BlogsState {
+  blogs: BlogWithUIState[]
+  currentBlog: BlogWithUIState | null
+  totalCount: number
+  currentPage: number
+  pageSize: number
+  searchQuery: string
+  selectedTags: string[]
+  availableTags: string[]
+  sortBy: 'createdAt' | 'updatedAt' | 'views' | 'likes' | 'title'
+  sortOrder: 'asc' | 'desc'
+  isPublished?: boolean
+  authorId?: string
+  isLoading: boolean
+  isCreating: boolean
+  isUpdating: boolean
+  isDeleting: boolean
+  error: string | null
 }

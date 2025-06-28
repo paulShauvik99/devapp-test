@@ -1,40 +1,45 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import { BrowserRouter } from 'react-router-dom';
-import { Provider } from 'react-redux';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import App from './App';
-import { store } from './app/store';
-import './styles/index.css';
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+import { BrowserRouter } from 'react-router-dom'
+import { Provider } from 'react-redux'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { store } from './app/store'
+import App from './App'
+import './index.css'
 
-const queryClient = new QueryClient();
+// Initialize MSW for development
+async function enableMocking() {
+  if (!import.meta.env.DEV) {
+    return
+  }
 
-
-// if (import.meta.env.MODE === 'development') {
-//   const { worker } = await import('./api/msw/browser');
-//   worker.start();
-// }
-
-
-if (import.meta.env.MODE === 'development') {
-  import('./api/msw/browser')
-    .then(({ worker }) => {
-      worker.start();
-      console.log('%c[MSW] Mock Service Worker started.', 'color: green; font-weight: bold;');
-    })
-    .catch((err) => console.error('Failed to start MSW', err));
+  const { worker } = await import('./api/msw/browser')
+  return worker.start({
+    onUnhandledRequest: 'bypass',
+  })
 }
 
+// Create QueryClient instance
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    },
+  },
+})
 
-
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <Provider store={store}>
-      <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
-          <App />
-        </BrowserRouter>
-      </QueryClientProvider>
-    </Provider>
-  </React.StrictMode>
-);
+enableMocking().then(() => {
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <Provider store={store}>
+        <QueryClientProvider client={queryClient}>
+          <BrowserRouter>
+            <App />
+          </BrowserRouter>
+        </QueryClientProvider>
+      </Provider>
+    </StrictMode>
+  )
+})
