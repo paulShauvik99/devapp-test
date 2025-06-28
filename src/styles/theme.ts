@@ -193,7 +193,7 @@ export const darkTheme = createTheme({
       secondary: '#94a3b8', // Slate-400
       disabled: '#64748b', // Slate-500
     },
-    divider: '#334155', // Slate-700
+    divider: '#334155', 
     grey: {
       50: '#f8fafc',
       100: '#f1f5f9',
