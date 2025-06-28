@@ -5,31 +5,6 @@ export interface PaginationParams {
     sortOrder?: 'asc' | 'desc';
 }
 
-export interface PaginatedResponse<T> {
-    data: T[];
-    pagination: {
-        currentPage: number;
-        totalPages: number;
-        totalItems: number;
-        hasNext: boolean;
-        hasPrev: boolean;
-        limit: number;
-    };
-}
-
-export interface ApiResponse<T = any> {
-    success: boolean;
-    data?: T;
-    message?: string;
-    errors?: ValidationError[];
-}
-
-export interface ValidationError {
-    field: string;
-    message: string;
-    code?: string;
-}
-
 export interface SearchParams {
     query: string;
     filters?: Record<string, any>;

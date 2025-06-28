@@ -13,7 +13,7 @@ async function enableMocking() {
     return
   }
 
-  const { worker } = await import('./api/msw/browser')
+  const { worker } = await import('./api/msw')
   return worker.start({
     onUnhandledRequest: 'bypass',
   })

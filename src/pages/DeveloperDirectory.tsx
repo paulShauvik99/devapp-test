@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { type Developer } from '../models/Developer';
+import { type Developer } from '../models/User';
 import { Card, Button } from '@mui/material';
 import { Link } from 'react-router-dom';
 
