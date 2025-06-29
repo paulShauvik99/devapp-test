@@ -1,8 +1,8 @@
 import { type ReactNode, useEffect } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
 import { Box, CircularProgress, Typography } from '@mui/material'
-import { useAppSelector, useAppDispatch } from '../../app/hooks/redux'
-import { checkAuthStatus } from '../../app/slice/authSlice'
+import { useAppSelector, useAppDispatch } from '../../store/hooks/redux'
+import { checkAuthStatus } from '../../store/slice/authSlice'
 
 interface ProtectedRouteProps {
   children: ReactNode

@@ -1,7 +1,7 @@
 import { useForm } from 'react-hook-form';
 import { TextField, Button, Card } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { useAppDispatch } from '../app/hooks';
+import { useAppDispatch } from '../store/hooks';
 import { setCredentials } from '../features/auth/authSlice';
 
 interface FormData {
