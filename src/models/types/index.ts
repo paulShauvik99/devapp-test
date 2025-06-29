@@ -16,19 +16,3 @@ export interface AppTheme {
     primaryColor: string;
     secondaryColor: string;
 }
-
-export interface AppSettings {
-    theme: AppTheme;
-    notifications: {
-        email: boolean;
-        push: boolean;
-        comments: boolean;
-        likes: boolean;
-        follows: boolean;
-    };
-    privacy: {
-        profileVisible: boolean;
-        emailVisible: boolean;
-        skillsVisible: boolean;
-    };
-}

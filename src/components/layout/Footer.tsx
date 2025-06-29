@@ -134,13 +134,7 @@ const Footer = () => {
             ))}
           </div>
         </div>
-
-        {/* Additional Info */}
-        <div className="text-center pt-6 border-t border-gray-200 dark:border-gray-700 mt-6">
-          <p className="text-xs text-gray-500 dark:text-gray-400">
-            Built with ❤️ using React and Tailwind CSS
-          </p>
-        </div>
+       
       </div>
     </footer>
   );

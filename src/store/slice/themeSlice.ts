@@ -1,8 +1,24 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
-import type { AppTheme, AppSettings } from '../../models';
 
-interface ThemeState extends AppSettings {
+interface ThemeState {
   isDarkMode: boolean;
+  theme: {
+    mode: 'light' | 'dark';
+    primaryColor: string;
+    secondaryColor: string;
+  };
+  notifications: {
+    email: boolean;
+    push: boolean;
+    comments: boolean;
+    likes: boolean;
+    follows: boolean;
+  };
+  privacy: {
+    profileVisible: boolean;
+    emailVisible: boolean;
+    skillsVisible: boolean;
+  };
 }
 
 const getInitialTheme = (): 'light' | 'dark' => {

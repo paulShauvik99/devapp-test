@@ -8,6 +8,7 @@ import type {
 } from '../../models/Blog';
 import type { Comment } from '../../models/Comment';
 import type { PaginatedResponse } from '../../models';
+import axios from 'axios';
 
 interface BlogState {
   blogs: Blog[];
@@ -75,32 +76,36 @@ export const fetchBlogs = createAsyncThunk<
         }
       });
 
-      const response = await fetch(`/api/blogs?${queryParams}`);
-      if (!response.ok) {
-        const error = await response.json();
-        return rejectWithValue(error.message || 'Failed to fetch blogs');
-      }
-      
-      return await response.json();
-    } catch (error) {
-      return rejectWithValue('Network error occurred');
+      const response = await axios.get(`/api/blogs?${queryParams}`);
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch blogs');
     }
   }
 );
+
+// 1. Fetch all blogs (default page 1, limit 10):
+
+// dispatch(fetchBlogs());
+// 2. Fetch blogs with filters:
+
+// dispatch(fetchBlogs({
+//   page: 2,
+//   limit: 5,
+//   tags: ['react', 'javascript'],
+//   search: 'hooks',
+//   authorId: 'u1',
+//   isPublished: true,
+// }));
 
 export const fetchBlogById = createAsyncThunk<Blog, string>(
   'blogs/fetchBlogById',
   async (blogId, { rejectWithValue }) => {
     try {
-      const response = await fetch(`/api/blogs/${blogId}`);
-      if (!response.ok) {
-        const error = await response.json();
-        return rejectWithValue(error.message || 'Blog not found');
-      }
-      
-      return await response.json();
-    } catch (error) {
-      return rejectWithValue('Network error occurred');
+      const response = await axios.get(`/api/blogs/${blogId}`);
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Blog not found');
     }
   }
 );
@@ -109,15 +114,10 @@ export const fetchUserBlogs = createAsyncThunk<Blog[], string>(
   'blogs/fetchUserBlogs',
   async (userId, { rejectWithValue }) => {
     try {
-      const response = await fetch(`/api/users/${userId}/blogs`);
-      if (!response.ok) {
-        const error = await response.json();
-        return rejectWithValue(error.message || 'Failed to fetch user blogs');
-      }
-      
-      return await response.json();
-    } catch (error) {
-      return rejectWithValue('Network error occurred');
+      const response = await axios.get(`/api/users/${userId}/blogs`);
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch user blogs');
     }
   }
 );
@@ -126,20 +126,10 @@ export const createBlog = createAsyncThunk<Blog, CreateBlogInput>(
   'blogs/createBlog',
   async (blogData, { rejectWithValue }) => {
     try {
-      const response = await fetch('/api/blogs', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(blogData),
-      });
-      
-      if (!response.ok) {
-        const error = await response.json();
-        return rejectWithValue(error.message || 'Failed to create blog');
-      }
-      
-      return await response.json();
-    } catch (error) {
-      return rejectWithValue('Network error occurred');
+      const response = await axios.post('/api/blogs', blogData);
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to create blog');
     }
   }
 );
@@ -151,20 +141,10 @@ export const updateBlog = createAsyncThunk<
   'blogs/updateBlog',
   async ({ id, data }, { rejectWithValue }) => {
     try {
-      const response = await fetch(`/api/blogs/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-      
-      if (!response.ok) {
-        const error = await response.json();
-        return rejectWithValue(error.message || 'Failed to update blog');
-      }
-      
-      return await response.json();
-    } catch (error) {
-      return rejectWithValue('Network error occurred');
+      const response = await axios.put(`/api/blogs/${id}`, data);
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to update blog');
     }
   }
 );
@@ -173,18 +153,10 @@ export const deleteBlog = createAsyncThunk<string, string>(
   'blogs/deleteBlog',
   async (blogId, { rejectWithValue }) => {
     try {
-      const response = await fetch(`/api/blogs/${blogId}`, {
-        method: 'DELETE',
-      });
-      
-      if (!response.ok) {
-        const error = await response.json();
-        return rejectWithValue(error.message || 'Failed to delete blog');
-      }
-      
+      await axios.delete(`/api/blogs/${blogId}`);
       return blogId;
-    } catch (error) {
-      return rejectWithValue('Network error occurred');
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to delete blog');
     }
   }
 );
@@ -193,39 +165,17 @@ export const likeBlog = createAsyncThunk<{ blogId: string; likes: number }, stri
   'blogs/likeBlog',
   async (blogId, { rejectWithValue }) => {
     try {
-      const response = await fetch(`/api/blogs/${blogId}/like`, {
-        method: 'POST',
-      });
-      
-      if (!response.ok) {
-        const error = await response.json();
-        return rejectWithValue(error.message || 'Failed to like blog');
-      }
-      
-      const data = await response.json();
-      return { blogId, likes: data.likes };
-    } catch (error) {
-      return rejectWithValue('Network error occurred');
+      const response = await axios.post(`/api/blogs/${blogId}/like`);
+      return { blogId, likes: response.data.likes };
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to like blog');
     }
   }
 );
 
-export const fetchBlogStats = createAsyncThunk<BlogStats, string>(
-  'blogs/fetchBlogStats',
-  async (userId, { rejectWithValue }) => {
-    try {
-      const response = await fetch(`/api/users/${userId}/blog-stats`);
-      if (!response.ok) {
-        const error = await response.json();
-        return rejectWithValue(error.message || 'Failed to fetch blog stats');
-      }
-      
-      return await response.json();
-    } catch (error) {
-      return rejectWithValue('Network error occurred');
-    }
-  }
-);
+
+
+
 
 const blogSlice = createSlice({
   name: 'blogs',
@@ -253,18 +203,6 @@ const blogSlice = createSlice({
       const blogIndex = state.blogs.findIndex(blog => blog.id === blogId);
       if (blogIndex !== -1) {
         state.blogs[blogIndex].commentCount += 1;
-      }
-    },
-    incrementViews: (state, action: PayloadAction<string>) => {
-      const blogId = action.payload;
-      
-      if (state.currentBlog && state.currentBlog.id === blogId) {
-        state.currentBlog.views += 1;
-      }
-      
-      const blogIndex = state.blogs.findIndex(blog => blog.id === blogId);
-      if (blogIndex !== -1) {
-        state.blogs[blogIndex].views += 1;
       }
     },
   },
@@ -367,10 +305,7 @@ const blogSlice = createSlice({
           state.blogs[blogIndex].likes = likes;
         }
       })
-      // Fetch blog stats
-      .addCase(fetchBlogStats.fulfilled, (state, action) => {
-        state.blogStats = action.payload;
-      });
+
   },
 });
 
@@ -378,8 +313,7 @@ export const {
   clearCurrentBlog, 
   clearError, 
   setSearchFilters, 
-  addComment, 
-  incrementViews 
+  addComment
 } = blogSlice.actions;
 
 export default blogSlice.reducer;

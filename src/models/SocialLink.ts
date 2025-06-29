@@ -3,10 +3,7 @@ export interface SocialLink {
     userId: string;
     platform: SocialPlatform;
     url: string;
-    username?: string;
-    isVerified: boolean;
-    createdAt: Date;
-    updatedAt: Date;
+    name?: string;
 }
 
 export const SocialPlatform = {
@@ -15,11 +12,7 @@ export const SocialPlatform = {
     TWITTER: 'twitter',
     INSTAGRAM: 'instagram',
     YOUTUBE: 'youtube',
-    BEHANCE: 'behance',
-    DRIBBBLE: 'dribbble',
-    STACKOVERFLOW: 'stackoverflow',
     WEBSITE: 'website',
-    PORTFOLIO: 'portfolio'
 } as const;
 
 export type SocialPlatform = typeof SocialPlatform[keyof typeof SocialPlatform];
@@ -27,10 +20,5 @@ export type SocialPlatform = typeof SocialPlatform[keyof typeof SocialPlatform];
 export interface CreateSocialLinkInput {
     platform: SocialPlatform;
     url: string;
-    username?: string;
-}
-
-export interface UpdateSocialLinkInput {
-    url?: string;
-    username?: string;
+    name?: string;
 }

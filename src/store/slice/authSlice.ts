@@ -1,14 +1,13 @@
 import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
 import type { 
-  AuthUser, 
   LoginInput, 
   RegisterInput, 
   AuthResponse,
-  ChangePasswordInput 
 } from '../../models/Auth';
+import type { User } from '../../models';
 
 interface AuthState {
-  user: AuthUser | null;
+  user: User | null;
   token: string | null;
   refreshToken: string | null;
   isAuthenticated: boolean;
@@ -148,25 +147,6 @@ export const checkAuthStatus = createAsyncThunk<AuthResponse | null, void>(
   }
 );
 
-export const changePassword = createAsyncThunk<void, ChangePasswordInput>(
-  'auth/changePassword',
-  async (passwordData, { rejectWithValue }) => {
-    try {
-      const response = await fetch('/api/auth/change-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(passwordData),
-      });
-      
-      if (!response.ok) {
-        const error = await response.json();
-        return rejectWithValue(error.message || 'Password change failed');
-      }
-    } catch (error) {
-      return rejectWithValue('Network error occurred');
-    }
-  }
-);
 
 const authSlice = createSlice({
   name: 'auth',
@@ -182,7 +162,7 @@ const authSlice = createSlice({
     clearError: (state) => {
       state.error = null;
     },
-    updateUserProfile: (state, action: PayloadAction<Partial<AuthUser>>) => {
+    updateUserProfile: (state, action: PayloadAction<Partial<User>>) => {
       if (state.user) {
         state.user = { ...state.user, ...action.payload };
       }
@@ -190,7 +170,6 @@ const authSlice = createSlice({
     setCredentials: (state, action: PayloadAction<AuthResponse>) => {
       state.user = action.payload.user;
       state.token = action.payload.token;
-      state.refreshToken = action.payload.refreshToken;
       state.isAuthenticated = true;
     },
   },
@@ -205,7 +184,6 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.user = action.payload.user;
         state.token = action.payload.token;
-        state.refreshToken = action.payload.refreshToken;
         state.isAuthenticated = true;
       })
       .addCase(loginUser.rejected, (state, action) => {
@@ -222,22 +200,11 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.user = action.payload.user;
         state.token = action.payload.token;
-        state.refreshToken = action.payload.refreshToken;
         state.isAuthenticated = true;
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
-      })
-      // Refresh token cases
-      .addCase(refreshAuthToken.fulfilled, (state, action) => {
-        state.token = action.payload;
-      })
-      .addCase(refreshAuthToken.rejected, (state) => {
-        state.user = null;
-        state.token = null;
-        state.refreshToken = null;
-        state.isAuthenticated = false;
       })
       // Check auth status cases
       .addCase(checkAuthStatus.pending, (state) => {
@@ -249,7 +216,6 @@ const authSlice = createSlice({
         if (action.payload) {
           state.user = action.payload.user;
           state.token = action.payload.token;
-          state.refreshToken = action.payload.refreshToken;
           state.isAuthenticated = true;
         } else {
           // No valid authentication
@@ -266,18 +232,6 @@ const authSlice = createSlice({
         state.refreshToken = null;
         state.isAuthenticated = false;
       })
-      // Change password cases
-      .addCase(changePassword.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
-      .addCase(changePassword.fulfilled, (state) => {
-        state.isLoading = false;
-      })
-      .addCase(changePassword.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload as string;
-      });
   },
 });
 
