@@ -99,6 +99,55 @@ export const refreshAuthToken = createAsyncThunk<string, void>(
   }
 );
 
+// NEW: Check authentication status
+export const checkAuthStatus = createAsyncThunk<AuthResponse | null, void>(
+  'auth/checkStatus',
+  async (_, { getState, rejectWithValue }) => {
+    try {
+      const state = getState() as { auth: AuthState };
+      const token = state.auth.token;
+      
+      // If no token, user is not authenticated
+      if (!token) {
+        return null;
+      }
+      
+      // Verify token with backend
+      const response = await fetch('/api/auth/verify', {
+        method: 'GET',
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json' 
+        },
+      });
+      
+      if (!response.ok) {
+        // Token is invalid, try to refresh
+        const refreshToken = state.auth.refreshToken;
+        if (refreshToken) {
+          const refreshResponse = await fetch('/api/auth/refresh', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refreshToken }),
+          });
+          
+          if (refreshResponse.ok) {
+            const refreshData = await refreshResponse.json();
+            return refreshData;
+          }
+        }
+        
+        return rejectWithValue('Authentication expired');
+      }
+      
+      const userData = await response.json();
+      return userData;
+    } catch (error) {
+      return rejectWithValue('Network error occurred');
+    }
+  }
+);
+
 export const changePassword = createAsyncThunk<void, ChangePasswordInput>(
   'auth/changePassword',
   async (passwordData, { rejectWithValue }) => {
@@ -185,6 +234,33 @@ const authSlice = createSlice({
         state.token = action.payload;
       })
       .addCase(refreshAuthToken.rejected, (state) => {
+        state.user = null;
+        state.token = null;
+        state.refreshToken = null;
+        state.isAuthenticated = false;
+      })
+      // Check auth status cases
+      .addCase(checkAuthStatus.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(checkAuthStatus.fulfilled, (state, action) => {
+        state.isLoading = false;
+        if (action.payload) {
+          state.user = action.payload.user;
+          state.token = action.payload.token;
+          state.refreshToken = action.payload.refreshToken;
+          state.isAuthenticated = true;
+        } else {
+          // No valid authentication
+          state.user = null;
+          state.token = null;
+          state.refreshToken = null;
+          state.isAuthenticated = false;
+        }
+      })
+      .addCase(checkAuthStatus.rejected, (state) => {
+        state.isLoading = false;
         state.user = null;
         state.token = null;
         state.refreshToken = null;

@@ -3,9 +3,12 @@ import {
   Search, Code, Users, BookOpen, MessageSquare, Github, 
   TrendingUp, Award, Zap, Database, Server, Globe, 
   GitBranch, Terminal, Layers, ChevronRight, Star,
-  ArrowRight, Calendar, Eye, Heart, Filter
+  ArrowRight, Calendar, Eye, Heart, Filter, LogOut,
+  Settings, User, Bell, Plus
 } from 'lucide-react';
-import { useAppDispatch, useAppSelector } from '../app/hooks';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { useNavigate } from 'react-router-dom';
+import { logout, checkAuthStatus } from '../store/slice/authSlice';
 
 // Define interfaces for type safety
 interface Developer {
@@ -35,16 +38,23 @@ interface BlogPost {
   featured: boolean;
 }
 
-
 const HomePage = () => {
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [featuredDevs, setFeaturedDevs] = useState<Developer[]>([]);
   const [recentBlogs, setRecentBlogs] = useState<BlogPost[]>([]);
   
   // Connect to Redux store
-  const dispatch = useAppDispatch();
+  const { user, isAuthenticated, isLoading, error } = useAppSelector((state) => state.auth);
   const isDarkMode = useAppSelector((state) => state.theme.isDarkMode);
+
+  // Check authentication status on component mount
+  useEffect(() => {
+    dispatch(checkAuthStatus());
+  }, [dispatch]);
 
   // Mock data for featured developers
   const mockFeaturedDevs: Developer[] = [
@@ -139,17 +149,11 @@ const HomePage = () => {
     }
   }, [isDarkMode]);
 
-  // Initialize theme and data
+  // Initialize data
   useEffect(() => {
-    // Initialize theme from localStorage/system preference
-    dispatch({ type: 'theme/initializeTheme' });
-    
-    // Set mock data
     setFeaturedDevs(mockFeaturedDevs);
     setRecentBlogs(mockRecentBlogs);
-  }, [dispatch]);
-
-
+  }, []);
 
   const techStats = [
     { tech: "React", count: 2847, trend: "+12%" },
@@ -169,46 +173,178 @@ const HomePage = () => {
     { value: 'mobile', label: 'Mobile' }
   ];
 
+  const handleLogout = () => {
+    dispatch(logout());
+    navigate('/');
+  };
+
+  const navigateToAuth = () => {
+    navigate("/register");
+  };
+
+  const navigateToProfile = () => {
+    navigate("/profile");
+  };
+
+  const navigateToDashboard = () => {
+    navigate("/dashboard");
+  };
+
+  // Authenticated User Header Component
+  const AuthenticatedHeader = () => (
+    <div className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
+          <div className="flex items-center space-x-4">
+            <h1 className="text-xl font-bold text-slate-900 dark:text-white">
+              Welcome back, {user?.name}!
+            </h1>
+          </div>
+          <div className="flex items-center space-x-4">
+            <button className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
+              <Bell className="w-5 h-5" />
+            </button>
+            <button 
+              onClick={navigateToProfile}
+              className="flex items-center space-x-2 p-2 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors"
+            >
+              <User className="w-5 h-5" />
+              <span className="hidden sm:inline">Profile</span>
+            </button>
+            <button 
+              onClick={navigateToDashboard}
+              className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <Settings className="w-4 h-4" />
+              <span className="hidden sm:inline">Dashboard</span>
+            </button>
+            <button 
+              onClick={handleLogout}
+              className="flex items-center space-x-2 p-2 text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+            >
+              <LogOut className="w-5 h-5" />
+              <span className="hidden sm:inline">Logout</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Authenticated User Quick Actions
+  const QuickActions = () => (
+    <section className="py-8 bg-slate-50 dark:bg-slate-800/50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <button className="flex items-center justify-center space-x-2 p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:shadow-md transition-all">
+            <Plus className="w-5 h-5 text-blue-600" />
+            <span className="font-medium text-slate-900 dark:text-white">Create Post</span>
+          </button>
+          <button className="flex items-center justify-center space-x-2 p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:shadow-md transition-all">
+            <Code className="w-5 h-5 text-green-600" />
+            <span className="font-medium text-slate-900 dark:text-white">Share Project</span>
+          </button>
+          <button className="flex items-center justify-center space-x-2 p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:shadow-md transition-all">
+            <Users className="w-5 h-5 text-purple-600" />
+            <span className="font-medium text-slate-900 dark:text-white">Find Developers</span>
+          </button>
+          <button className="flex items-center justify-center space-x-2 p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:shadow-md transition-all">
+            <BookOpen className="w-5 h-5 text-orange-600" />
+            <span className="font-medium text-slate-900 dark:text-white">Write Article</span>
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-slate-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-slate-600 dark:text-slate-300">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-white dark:bg-slate-900 transition-colors duration-300">
+      {/* Authenticated User Header */}
+      {isAuthenticated && <AuthenticatedHeader />}
 
-      {/* Hero Section */}
+      {/* Hero Section - Modified based on auth status */}
       <section className="relative overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
         <div className="absolute inset-0 bg-grid-slate-100/50 dark:bg-grid-slate-700/25"></div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-28">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-8">
-              <div className="inline-flex items-center px-4 py-2 bg-blue-100 dark:bg-blue-900/30 rounded-full text-sm font-medium text-blue-800 dark:text-blue-300">
-                <Zap className="w-4 h-4 mr-2" />
-                Now with advanced search filters
-              </div>
+              {!isAuthenticated && (
+                <div className="inline-flex items-center px-4 py-2 bg-blue-100 dark:bg-blue-900/30 rounded-full text-sm font-medium text-blue-800 dark:text-blue-300">
+                  <Zap className="w-4 h-4 mr-2" />
+                  Now with advanced search filters
+                </div>
+              )}
               
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-slate-900 dark:text-white leading-tight">
-                Connect with
-                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-violet-600 to-cyan-600">
-                  Expert Developers
-                </span>
+                {isAuthenticated ? (
+                  <>
+                    Continue Building Your
+                    <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-violet-600 to-cyan-600">
+                      Professional Network
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    Connect with
+                    <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-violet-600 to-cyan-600">
+                      Expert Developers
+                    </span>
+                  </>
+                )}
               </h1>
               
               <p className="text-xl text-slate-600 dark:text-slate-300 leading-relaxed">
-                Discover skilled developers, dive into technical blogs, and build your professional network. 
-                Find expertise in cutting-edge technologies and architectural patterns.
+                {isAuthenticated ? (
+                  "Explore new connections, share your expertise, and discover the latest in tech. Your developer journey continues here."
+                ) : (
+                  "Discover skilled developers, dive into technical blogs, and build your professional network. Find expertise in cutting-edge technologies and architectural patterns."
+                )}
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4">
-                <button className="bg-gradient-to-r from-blue-600 to-violet-600 text-white px-8 py-4 rounded-xl font-semibold hover:from-blue-700 hover:to-violet-700 transition-all transform hover:scale-105 shadow-lg hover:shadow-xl">
-                  Explore Developers
-                </button>
-                <button className="border-2 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 px-8 py-4 rounded-xl font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all">
-                  Browse Technical Blogs
-                </button>
+                {isAuthenticated ? (
+                  <>
+                    <button 
+                      onClick={navigateToDashboard}
+                      className="bg-gradient-to-r from-blue-600 to-violet-600 text-white px-8 py-4 rounded-xl font-semibold hover:from-blue-700 hover:to-violet-700 transition-all transform hover:scale-105 shadow-lg hover:shadow-xl"
+                    >
+                      Go to Dashboard
+                    </button>
+                    <button className="border-2 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 px-8 py-4 rounded-xl font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all">
+                      Explore Community
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button className="bg-gradient-to-r from-blue-600 to-violet-600 text-white px-8 py-4 rounded-xl font-semibold hover:from-blue-700 hover:to-violet-700 transition-all transform hover:scale-105 shadow-lg hover:shadow-xl">
+                      Explore Developers
+                    </button>
+                    <button className="border-2 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 px-8 py-4 rounded-xl font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all">
+                      Browse Technical Blogs
+                    </button>
+                  </>
+                )}
               </div>
             </div>
 
             <div className="relative">
               <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-6 border border-slate-200 dark:border-slate-700">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-semibold text-slate-900 dark:text-white">Advanced Search</h3>
+                  <h3 className="font-semibold text-slate-900 dark:text-white">
+                    {isAuthenticated ? "Quick Search" : "Advanced Search"}
+                  </h3>
                   <Filter className="w-5 h-5 text-slate-400" />
                 </div>
                 
@@ -218,7 +354,7 @@ const HomePage = () => {
                       type="text"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Search by skills, experience, or location..."
+                      placeholder={isAuthenticated ? "Search developers, projects, or articles..." : "Search by skills, experience, or location..."}
                       className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400"
                     />
                   </div>
@@ -238,7 +374,7 @@ const HomePage = () => {
                   </div>
                   
                   <button className="w-full bg-gradient-to-r from-blue-600 to-violet-600 text-white py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-violet-700 transition-all">
-                    Search Developers
+                    {isAuthenticated ? "Search" : "Search Developers"}
                   </button>
                 </div>
               </div>
@@ -246,6 +382,18 @@ const HomePage = () => {
           </div>
         </div>
       </section>
+
+      {/* Quick Actions for Authenticated Users */}
+      {isAuthenticated && <QuickActions />}
+
+      {/* Error Display */}
+      {error && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+            <p className="text-red-800 dark:text-red-200">{error}</p>
+          </div>
+        </div>
+      )}
 
       {/* Tech Trends Section */}
       <section className="py-16 bg-slate-50 dark:bg-slate-800/50">
@@ -284,10 +432,10 @@ const HomePage = () => {
           <div className="flex items-center justify-between mb-12">
             <div>
               <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">
-                Featured Developers
+                {isAuthenticated ? "Recommended Developers" : "Featured Developers"}
               </h2>
               <p className="text-slate-600 dark:text-slate-300">
-                Connect with experienced professionals in your field
+                {isAuthenticated ? "Based on your interests and connections" : "Connect with experienced professionals in your field"}
               </p>
             </div>
             <button className="flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium">
@@ -344,7 +492,7 @@ const HomePage = () => {
 
                 <div className="flex items-center justify-between">
                   <button className="flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium">
-                    View Profile
+                    {isAuthenticated ? "Connect" : "View Profile"}
                     <ChevronRight className="w-4 h-4 ml-1" />
                   </button>
                   <a
@@ -366,10 +514,10 @@ const HomePage = () => {
           <div className="flex items-center justify-between mb-12">
             <div>
               <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">
-                Latest Technical Insights
+                {isAuthenticated ? "Recommended Reading" : "Latest Technical Insights"}
               </h2>
               <p className="text-slate-600 dark:text-slate-300">
-                In-depth articles from experienced developers
+                {isAuthenticated ? "Articles tailored to your interests" : "In-depth articles from experienced developers"}
               </p>
             </div>
             <button className="flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium">
@@ -519,12 +667,10 @@ const HomePage = () => {
             Join thousands of experienced developers who are already building meaningful connections and sharing knowledge on DevHub.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button className="bg-gradient-to-r from-blue-600 to-violet-600 text-white px-8 py-4 rounded-xl font-semibold hover:from-blue-700 hover:to-violet-700 transition-all transform hover:scale-105 shadow-lg">
+            <button className="bg-gradient-to-r from-blue-600 to-violet-600 text-white px-8 py-4 rounded-xl font-semibold hover:from-blue-700 hover:to-violet-700 transition-all transform hover:scale-105 shadow-lg" onClick={navigateToAuth}>
               Create Your Profile
             </button>
-            <button className="border-2 border-slate-400 text-slate-300 px-8 py-4 rounded-xl font-semibold hover:bg-slate-800 hover:border-slate-300 transition-all">
-              Explore Platform
-            </button>
+            
           </div>
         </div>
       </section>

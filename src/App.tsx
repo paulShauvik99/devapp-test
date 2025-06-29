@@ -1,10 +1,10 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, useLocation } from 'react-router-dom'
 import { useEffect } from 'react'
 import { useDispatch } from 'react-redux'
 import { CssBaseline, ThemeProvider } from '@mui/material'
 import  Navbar  from './components/layout/Navbar'
 import  Footer  from './components/layout/Footer'
-import { useAppSelector } from './store/hooks/redux'
+import { useAppSelector } from './store/hooks'
 import { initializeTheme } from './store/slice/themeSlice'
 import { ProtectedRoute } from './components/auth/ProtectedRoute'
 import { lightTheme, darkTheme } from './styles/theme'
@@ -23,7 +23,11 @@ import  NotFoundPage  from './pages/NotFoundPage'
 
 function App() {
   const dispatch = useDispatch()
+  const location = useLocation()
   const { isDarkMode } = useAppSelector((state) => state.theme)
+
+  // Check if current route is auth page
+  const isAuthPage = location.pathname === '/login' || location.pathname === '/register'
 
   useEffect(() => {
     dispatch(initializeTheme())
@@ -33,7 +37,9 @@ function App() {
     <ThemeProvider theme={isDarkMode ? darkTheme : lightTheme}>
       <CssBaseline />
       <div className="min-h-screen flex flex-col">
-        <Navbar />
+        {/* Conditionally render Navbar */}
+        {!isAuthPage && <Navbar />}
+        
         <main className="flex-1">
           <Routes>
             {/* Public Routes */}
@@ -67,7 +73,9 @@ function App() {
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </main>
-        <Footer />
+        
+        {/* Conditionally render Footer */}
+        {!isAuthPage && <Footer />}
       </div>
     </ThemeProvider>
   )
