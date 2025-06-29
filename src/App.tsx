@@ -14,7 +14,7 @@ import  HomePage  from './pages/HomePage'
 import  DeveloperListPage  from './pages/DeveloperListPage'
 import  DeveloperProfilePage  from './pages/DeveloperProfilePage'
 import  BlogListPage  from './pages/BlogListPage'
-import  BlogDetailPage  from './pages/BlogDetailPage'
+import  UserBlogsPage  from './pages/UserBlogsPage'
 import  CreateBlogPage  from './pages/CreateBlogPage'
 import  EditBlogPage  from './pages/EditBlogPage'
 import  LoginPage  from './pages/LoginPage'
@@ -44,10 +44,6 @@ function App() {
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={<HomePage />} />
-            <Route path="/developers" element={<DeveloperListPage />} />
-            <Route path="/developers/:id" element={<DeveloperProfilePage />} />
-            <Route path="/blogs" element={<BlogListPage />} />
-            <Route path="/blogs/:id" element={<BlogDetailPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
 
@@ -68,6 +64,11 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            {/* Protected Route to be added */}
+            <Route path="/developers" element={<DeveloperListPage />} />
+            <Route path="/developers/:id" element={<DeveloperProfilePage />} />
+            <Route path="/blogs" element={<BlogListPage />} />
+            <Route path="/blogs/developers/:id" element={<UserBlogsPage />} />
 
             {/* 404 Route */}
             <Route path="*" element={<NotFoundPage />} />

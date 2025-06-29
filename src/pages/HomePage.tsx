@@ -48,12 +48,8 @@ const HomePage = () => {
   const [recentBlogs, setRecentBlogs] = useState<BlogPost[]>([]);
   
   // Connect to Redux store
-  let { user, isAuthenticated, isLoading, error } = useAppSelector((state) => state.auth);
+  const { user, isAuthenticated, isLoading, error } = useAppSelector((state) => state.auth);
   const isDarkMode = useAppSelector((state) => state.theme.isDarkMode);
-
-  isAuthenticated = true;
-
-  console.log(isAuthenticated)
 
   // Check authentication status on component mount
   useEffect(() => {
