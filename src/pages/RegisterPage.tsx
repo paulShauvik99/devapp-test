@@ -1,4 +1,7 @@
 import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+import * as yup from 'yup';
 import {
   Eye, EyeOff, Mail, Lock, User, Code, ArrowRight, AlertCircle,
   Globe2, UserCircle2, Moon, Sun
@@ -6,103 +9,78 @@ import {
 import { toggleTheme } from '../store/slice/themeSlice';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { useNavigate } from 'react-router-dom';
+import { registerUser } from '../store/slice/authSlice';
 
 // Define types for better TypeScript support
-interface FormData {
+export interface RegisterInput {
   email: string;
   username: string;
   name: string;
   password: string;
   confirmPassword: string;
-  agreeToTerms: boolean;
 }
 
-interface FormErrors {
-  email?: string;
-  username?: string;
-  name?: string;
-  password?: string;
-  confirmPassword?: string;
-  agreeToTerms?: string;
-}
+// Yup validation schema
+const validationSchema = yup.object({
+  email: yup
+    .string()
+    .required('Email is required')
+    .email('Email is invalid'),
+  username: yup
+    .string()
+    .required('Username is required')
+    .min(3, 'Username must be at least 3 characters')
+    .matches(/^[a-zA-Z0-9_]+$/, 'Username can only contain letters, numbers, and underscores'),
+  name: yup
+    .string()
+    .required('Name is required')
+    .min(2, 'Name must be at least 2 characters'),
+  password: yup
+    .string()
+    .required('Password is required')
+    .min(8, 'Password must be at least 8 characters'),
+  confirmPassword: yup
+    .string()
+    .required('Please confirm your password')
+    .oneOf([yup.ref('password')], 'Passwords do not match'),
+});
 
-const SignupPage = () => {
+const RegisterPage = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { isDarkMode } = useAppSelector((state) => state.theme);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [formData, setFormData] = useState<FormData>({
-    email: '',
-    username: '',
-    name: '',
-    password: '',
-    confirmPassword: '',
-    agreeToTerms: false
-  });
-  const [errors, setErrors] = useState<FormErrors>({});
+  const [agreeToTerms, setAgreeToTerms] = useState(false);
+  const [termsError, setTermsError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type } = e.target;
-    const checked = (e.target as HTMLInputElement).checked;
+  const { register, handleSubmit, formState: { errors }, clearErrors} = useForm<RegisterInput>({
+    resolver: yupResolver(validationSchema),
+    mode: 'onChange'
+  });
 
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
-
-    // Clear error when user starts typing
-    if (errors[name as keyof FormErrors]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
+  const onSubmit = async (data: RegisterInput) => {
+    // Check terms agreement
+    if (!agreeToTerms) {
+      setTermsError('You must agree to the terms');
+      return;
     }
-  };
-
-  const validateForm = (): boolean => {
-    const newErrors: FormErrors = {};
-
-    if (!formData.email) newErrors.email = 'Email is required';
-    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Email is invalid';
-
-    if (!formData.username) newErrors.username = 'Username is required';
-    else if (formData.username.length < 3) newErrors.username = 'Username must be at least 3 characters';
-    else if (!/^[a-zA-Z0-9_]+$/.test(formData.username)) newErrors.username = 'Username can only contain letters, numbers, and underscores';
-
-    if (!formData.name) newErrors.name = 'Name is required';
-    else if (formData.name.length < 2) newErrors.name = 'Name must be at least 2 characters';
-
-    if (!formData.password) newErrors.password = 'Password is required';
-    else if (formData.password.length < 8) newErrors.password = 'Password must be at least 8 characters';
-
-    if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
-    }
-
-    if (!formData.agreeToTerms) newErrors.agreeToTerms = 'You must agree to the terms';
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async () => {
-    if (!validateForm()) return;
 
     setIsLoading(true);
 
-    // Prepare data according to CreateUserInput interface
-    const createUserData = {
-      email: formData.email,
-      username: formData.username,
-      name: formData.name,
-      password: formData.password
-    };
+    const res = await  dispatch(registerUser(data))
+    
+    if(registerUser.fulfilled.match(res)) {
+      navigate('/');
+    } else {
+      const error = res.payload as string;
+      console.error('Registration failed:', error);
+      alert(`Registration failed: ${error}`);   
+    }
+    
+    setIsLoading(false);
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      console.log('Signup submitted:', createUserData);
-      // Handle success/error
-    }, 2000);
   };
 
   const handleThemeToggle = () => {
@@ -112,6 +90,13 @@ const SignupPage = () => {
   const navigateSignIn = () => {
     navigate("/login")
   }
+
+  const handleTermsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setAgreeToTerms(e.target.checked);
+    if (e.target.checked && termsError) {
+      setTermsError('');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 flex items-center justify-center p-4 relative">
@@ -199,7 +184,7 @@ const SignupPage = () => {
               </p>
             </div>
 
-            <div className="space-y-6">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
 
               {/* Email */}
               <div>
@@ -210,9 +195,11 @@ const SignupPage = () => {
                   <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
                   <input
                     type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
+                    {...register('email')}
+                    onChange={(e) => {
+                      register('email').onChange(e);
+                      if (errors.email) clearErrors('email');
+                    }}
                     className={`w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-700 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 ${errors.email ? 'border-red-300 dark:border-red-600' : 'border-slate-200 dark:border-slate-600'
                       }`}
                     placeholder="john@company.com"
@@ -221,7 +208,7 @@ const SignupPage = () => {
                 {errors.email && (
                   <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center">
                     <AlertCircle className="w-4 h-4 mr-1" />
-                    {errors.email}
+                    {errors.email.message}
                   </p>
                 )}
               </div>
@@ -236,9 +223,11 @@ const SignupPage = () => {
                     <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
                     <input
                       type="text"
-                      name="username"
-                      value={formData.username}
-                      onChange={handleInputChange}
+                      {...register('username')}
+                      onChange={(e) => {
+                        register('username').onChange(e);
+                        if (errors.username) clearErrors('username');
+                      }}
                       className={`w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-700 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 ${errors.username ? 'border-red-300 dark:border-red-600' : 'border-slate-200 dark:border-slate-600'
                         }`}
                       placeholder="johndoe"
@@ -247,7 +236,7 @@ const SignupPage = () => {
                   {errors.username && (
                     <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center">
                       <AlertCircle className="w-4 h-4 mr-1" />
-                      {errors.username}
+                      {errors.username.message}
                     </p>
                   )}
                 </div>
@@ -258,9 +247,11 @@ const SignupPage = () => {
                   </label>
                   <input
                     type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
+                    {...register('name')}
+                    onChange={(e) => {
+                      register('name').onChange(e);
+                      if (errors.name) clearErrors('name');
+                    }}
                     className={`w-full px-4 py-3 bg-slate-50 dark:bg-slate-700 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 ${errors.name ? 'border-red-300 dark:border-red-600' : 'border-slate-200 dark:border-slate-600'
                       }`}
                     placeholder="John Doe"
@@ -268,7 +259,7 @@ const SignupPage = () => {
                   {errors.name && (
                     <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center">
                       <AlertCircle className="w-4 h-4 mr-1" />
-                      {errors.name}
+                      {errors.name.message}
                     </p>
                   )}
                 </div>
@@ -283,9 +274,11 @@ const SignupPage = () => {
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
                   <input
                     type={showPassword ? 'text' : 'password'}
-                    name="password"
-                    value={formData.password}
-                    onChange={handleInputChange}
+                    {...register('password')}
+                    onChange={(e) => {
+                      register('password').onChange(e);
+                      if (errors.password) clearErrors('password');
+                    }}
                     className={`w-full pl-10 pr-12 py-3 bg-slate-50 dark:bg-slate-700 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 ${errors.password ? 'border-red-300 dark:border-red-600' : 'border-slate-200 dark:border-slate-600'
                       }`}
                     placeholder="Enter your password"
@@ -301,7 +294,7 @@ const SignupPage = () => {
                 {errors.password && (
                   <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center">
                     <AlertCircle className="w-4 h-4 mr-1" />
-                    {errors.password}
+                    {errors.password.message}
                   </p>
                 )}
               </div>
@@ -315,9 +308,11 @@ const SignupPage = () => {
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
                   <input
                     type={showConfirmPassword ? 'text' : 'password'}
-                    name="confirmPassword"
-                    value={formData.confirmPassword}
-                    onChange={handleInputChange}
+                    {...register('confirmPassword')}
+                    onChange={(e) => {
+                      register('confirmPassword').onChange(e);
+                      if (errors.confirmPassword) clearErrors('confirmPassword');
+                    }}
                     className={`w-full pl-10 pr-12 py-3 bg-slate-50 dark:bg-slate-700 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 ${errors.confirmPassword ? 'border-red-300 dark:border-red-600' : 'border-slate-200 dark:border-slate-600'
                       }`}
                     placeholder="Confirm your password"
@@ -333,7 +328,7 @@ const SignupPage = () => {
                 {errors.confirmPassword && (
                   <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center">
                     <AlertCircle className="w-4 h-4 mr-1" />
-                    {errors.confirmPassword}
+                    {errors.confirmPassword.message}
                   </p>
                 )}
               </div>
@@ -343,10 +338,9 @@ const SignupPage = () => {
                 <label className="flex items-start space-x-3">
                   <input
                     type="checkbox"
-                    name="agreeToTerms"
-                    checked={formData.agreeToTerms}
-                    onChange={handleInputChange}
-                    className={`mt-1 w-4 h-4 text-blue-600 bg-slate-50 dark:bg-slate-700 border rounded focus:ring-blue-500 focus:ring-2 ${errors.agreeToTerms ? 'border-red-300 dark:border-red-600' : 'border-slate-300 dark:border-slate-600'
+                    checked={agreeToTerms}
+                    onChange={handleTermsChange}
+                    className={`mt-1 w-4 h-4 text-blue-600 bg-slate-50 dark:bg-slate-700 border rounded focus:ring-blue-500 focus:ring-2 ${termsError ? 'border-red-300 dark:border-red-600' : 'border-slate-300 dark:border-slate-600'
                       }`}
                   />
                   <span className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
@@ -360,17 +354,17 @@ const SignupPage = () => {
                     </button>
                   </span>
                 </label>
-                {errors.agreeToTerms && (
+                {termsError && (
                   <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center">
                     <AlertCircle className="w-4 h-4 mr-1" />
-                    {errors.agreeToTerms}
+                    {termsError}
                   </p>
                 )}
               </div>
 
               {/* Submit Button */}
               <button
-                onClick={handleSubmit}
+                type="submit"
                 disabled={isLoading}
                 className="w-full bg-gradient-to-r from-blue-600 to-violet-600 text-white py-3 px-4 rounded-xl font-semibold hover:from-blue-700 hover:to-violet-700 transition-all transform hover:scale-[1.02] shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center space-x-2"
               >
@@ -383,7 +377,7 @@ const SignupPage = () => {
                   </>
                 )}
               </button>
-            </div>
+            </form>
 
             {/* Sign In Link */}
             <div className="mt-8 text-center">
@@ -405,4 +399,4 @@ const SignupPage = () => {
   );
 };
 
-export default SignupPage;
+export default RegisterPage;

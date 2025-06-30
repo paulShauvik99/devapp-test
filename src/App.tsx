@@ -47,16 +47,7 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
 
-            {/* Protected Routes 
-            <Route
-              path="/blogs/create"
-              element={
-                <ProtectedRoute>
-                  <CreateBlogPage />
-                </ProtectedRoute>
-              }
-            />
-            */}
+            
             <Route
               path="/blogs/:id/edit"
               element={

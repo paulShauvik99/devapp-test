@@ -12,14 +12,12 @@ export const authHandlers = [
 
         if (user && password === user.password) {
             const token = generateJWT({ id: user.id, email: user.email });
-            const refreshToken = generateJWT({ id: user.id }, 7 * 24 * 60 * 60); 
 
             return HttpResponse.json(
                 createResponse({
                     user,
                     token,
-                    refreshToken,
-                    expiresIn: 3600
+                    expiresIn: 3600 * 24
                 }, 'Login successful'),
                 { status: 200 }
             );
@@ -59,15 +57,15 @@ export const authHandlers = [
             isActive: true,
         } as User;
 
+        mockUsers.push(newUser);
+
         const token = generateJWT({ id: newUser.id, email: newUser.email });
-        const refreshToken = generateJWT({ id: newUser.id }, 7 * 24 * 60 * 60);
 
         return HttpResponse.json(
             createResponse({
                 user: newUser,
                 token,
-                refreshToken,
-                expiresIn: 3600
+                expiresIn: 3600 * 24
             }, 'Registration successful'),
             { status: 201 }
         );

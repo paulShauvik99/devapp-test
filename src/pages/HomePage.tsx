@@ -1,23 +1,23 @@
 import { useState, useEffect } from 'react';
 import { 
-  Search, Code, Users, BookOpen, MessageSquare, Github, 
-  TrendingUp, Award, Zap, Database, Server, Globe, 
-  GitBranch, Terminal, Layers, ChevronRight, Star,
-  ArrowRight, Calendar, Eye, Heart, Filter, LogOut,
+  Users, BookOpen, MessageSquare,
+  TrendingUp, Award,
+  ArrowRight, Calendar, Heart, LogOut,
   Settings, User, Bell, Plus, Lock
 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { useNavigate } from 'react-router-dom';
-import { logout, checkAuthStatus } from '../store/slice/authSlice';
-import { fetchBlogs } from '../store/slice/blogSlice';
+import { logout } from '../store/slice/authSlice';
+import { createBlog, fetchBlogs, fetchUserBlogs } from '../store/slice/blogSlice';
 import { fetchDevelopers } from '../store/slice/userSlice';
+import type { Blog, CreateBlogInput, UpdateBlogInput } from '../models';
+import CreateBlogModal from './CreateBlogPage';
 
 const HomePage = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
 
   useEffect(() => {
-    dispatch(checkAuthStatus());
     dispatch(fetchBlogs()); 
     dispatch(fetchDevelopers())
   }, [dispatch]);
@@ -30,15 +30,13 @@ const HomePage = () => {
   // Mock user data
   const mockUsers  = useAppSelector((state) => state.developers.developers);
   console.log(isAuthenticated)
-
-
-
+  const [isModalOpen, setIsModalOpen] = useState(false);
 // const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showLoginPopup, setShowLoginPopup] = useState(false);
+  const [editBlog, setEditBlog] = useState<Blog | {}>({});
+  
 
- console.log(isAuthenticated)
 
-  console.log(mockUsers)
   const formatDate = (date: Date | string) => {
     const now = new Date();
     const inputDate = typeof date === 'string' ? new Date(date) : date;
@@ -52,8 +50,6 @@ const HomePage = () => {
   };
 
   const getAuthor = (authorId : string) => {
-    console.log(mockUsers)
-    console.log(authorId)
     return mockUsers.find(user => user.id === authorId);
   };
 
@@ -63,15 +59,22 @@ const HomePage = () => {
       return;
     }
     // Navigate to CreateBlog page
+    setIsModalOpen(true);
     console.log("Navigating to CreateBlog page");
   };
+
+    const handleSaveBlog = async (blogData: CreateBlogInput | UpdateBlogInput) => {
+        await dispatch(createBlog({ id: user!.id, data: blogData as CreateBlogInput }));
+        setIsModalOpen(false);
+    };
+  
 
   const handleFindDevelopers = () => {
     // Navigate to FindDevelopers page
     console.log("Navigating to FindDevelopers page");
   };
 
-  const handleReadBlog = (blogId) => {
+  const handleReadBlog = (blogId : string) => {
     if (!isAuthenticated) {
       setShowLoginPopup(true);
       return;
@@ -82,22 +85,19 @@ const HomePage = () => {
 
   const handleAllBlogs = () => {
     // Navigate to AllBlogs page
-    console.log("Navigating to AllBlogs page");
+    navigate('/blogs');
   };
 
   const closeLoginPopup = () => {
     setShowLoginPopup(false);
   };
 
-  const toggleAuth = () => {
-    console.log("ckick")
-  };
 
   const navigateToLogin = () => {
-    console.log("Login Clicked")
+    navigate('/login');
   }
   const navigateToRegister = () => {
-    console.log("Register Clicked")
+    navigate('/register');
   }
 
 
@@ -121,75 +121,6 @@ const HomePage = () => {
     { tech: "Rust", count: 456, trend: "+45%" }
   ];
 
-  const filterOptions = [
-    { value: 'all', label: 'All Technologies' },
-    { value: 'frontend', label: 'Frontend' },
-    { value: 'backend', label: 'Backend' },
-    { value: 'fullstack', label: 'Full Stack' },
-    { value: 'devops', label: 'DevOps' },
-    { value: 'mobile', label: 'Mobile' }
-  ];
-
-  const handleLogout = () => {
-    dispatch(logout());
-    navigate('/');
-  };
-
-  const navigateToAuth = () => {
-    navigate("/register");
-  };
-
-  const navigateToProfile = () => {
-    navigate("/profile");
-  };
-
-  const navigateToDashboard = () => {
-    navigate("/dashboard");
-  };
-
-  // Authenticated User Header Component
-  const AuthenticatedHeader = () => (
-    <div className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          <div className="flex items-center space-x-4">
-            <h1 className="text-xl font-bold text-slate-900 dark:text-white">
-              Welcome back, {user?.name}!
-            </h1>
-          </div>
-          <div className="flex items-center space-x-4">
-            <button className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
-              <Bell className="w-5 h-5" />
-            </button>
-            <button 
-              onClick={navigateToProfile}
-              className="flex items-center space-x-2 p-2 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors"
-            >
-              <User className="w-5 h-5" />
-              <span className="hidden sm:inline">Profile</span>
-            </button>
-            <button 
-              onClick={navigateToDashboard}
-              className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              <Settings className="w-4 h-4" />
-              <span className="hidden sm:inline">Dashboard</span>
-            </button>
-            <button 
-              onClick={handleLogout}
-              className="flex items-center space-x-2 p-2 text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
-            >
-              <LogOut className="w-5 h-5" />
-              <span className="hidden sm:inline">Logout</span>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-
-
   // Show loading state
   if (isLoading) {
     return (
@@ -203,9 +134,7 @@ const HomePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-slate-900 transition-colors duration-300">
-      {/* Authenticated User Header */}
-      {isAuthenticated && <AuthenticatedHeader />}
+    <div className="min-h-screen bg-white dark:bg-slate-900 transition-colors duration-300">    
 
       <section className="relative overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
         <div className="absolute inset-0 bg-grid-slate-100/50 dark:bg-grid-slate-700/25"></div>
@@ -252,11 +181,7 @@ const HomePage = () => {
               <div className="flex flex-col sm:flex-row gap-4">
                 {isAuthenticated ? (
                   <>
-                    <button className="bg-gradient-to-r from-blue-600 to-violet-600 text-white px-8 py-4 rounded-xl font-semibold hover:from-blue-700 hover:to-violet-700 transition-all transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center">
-                      <BookOpen className="w-5 h-5 mr-2" />
-                      Start Writing
-                    </button>
-                    <button className="border-2 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 px-8 py-4 rounded-xl font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center justify-center">
+                    <button onClick={() => navigate('/blogs')} className="bg-gradient-to-r from-blue-600 to-violet-600 text-white px-8 py-4 rounded-xl font-semibold hover:from-blue-700 hover:to-violet-700 transition-all transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center">
                       <Users className="w-5 h-5 mr-2" />
                       Explore Blogs
                     </button>
@@ -688,7 +613,16 @@ const HomePage = () => {
       )}
     </div>
 
+    <CreateBlogModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onSave={handleSaveBlog}
+          disableEscapeKeyDown
+          editBlogMode={false}
+          data={{}}
+    />
     </div>
+
   );
 };
 

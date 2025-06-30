@@ -55,7 +55,7 @@ const initialState: DeveloperState = {
 
 // Async thunks
 export const fetchDevelopers = createAsyncThunk<
-  PaginatedResponse<UserProfile>,
+  PaginatedResponse<User>,
   DeveloperSearchFilters | void
 >(
   'developers/fetchDevelopers',

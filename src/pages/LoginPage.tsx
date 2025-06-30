@@ -39,7 +39,7 @@ const LoginPage = () => {
 
 
   // React Hook Form setup
-  const { register, handleSubmit, formState: { errors, isValid, isDirty },  watch, reset } = useForm<FormData>({
+  const { register, handleSubmit, formState: { errors, isValid},  watch } = useForm<FormData>({
     resolver: yupResolver(validationSchema),
     mode: 'onChange',
     defaultValues: {
@@ -48,14 +48,7 @@ const LoginPage = () => {
     }
   });
 
-  useEffect(() => {
-      if(loginRes.isAuthenticated){
-        localStorage.setItem('token', loginRes.token || '');
-        localStorage.setItem('isAuthenticated', loginRes.isAuthenticated ? 'true' : 'false');
-        navigate('/');
-      }
-  },[loginRes])
-
+  
 
   // // Watch form values for dynamic UI updates
   const watchedEmail = watch('email');
@@ -63,8 +56,19 @@ const LoginPage = () => {
 
   const onSubmit = async (data: FormData) => {
     setIsLoading(true);
-    dispatch(loginUser( data ));
+    const resAction = await dispatch(loginUser( data ));
     setIsLoading(false);
+
+    if(loginUser.fulfilled.match(resAction)) {
+      console.log('Login successful:', resAction.payload);
+      // navigate to dashboard or home page
+      navigate('/');
+    } else {
+      console.error('Login failed:', resAction.error.message);
+      // Handle error (e.g., show notification)
+      alert(`Login failed: ${resAction.error.message}`);
+    }
+
   };
 
   const handleThemeToggle = () => {
@@ -72,8 +76,7 @@ const LoginPage = () => {
   };
 
   const navigateRegister = () => {
-    console.log('Navigate to register');
-    // navigate("/register") - would work with router
+    navigate("/register")
   };
 
   return (
@@ -217,24 +220,6 @@ const LoginPage = () => {
                     {errors.password.message}
                   </p>
                 )}
-              </div>
-
-              {/* Remember Me / Forgot Password */}
-              <div className="flex items-center justify-between">
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    {...register('rememberMe')}
-                    className="w-4 h-4 text-blue-600 bg-slate-50 dark:bg-slate-700 border-slate-300 dark:border-slate-600 rounded focus:ring-blue-500 focus:ring-2"
-                  />
-                  <span className="ml-2 text-sm text-slate-600 dark:text-slate-400">Remember me</span>
-                </label>
-                <button
-                  type="button"
-                  className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
-                >
-                  Forgot password?
-                </button>
               </div>
 
               {/* Submit Button */}

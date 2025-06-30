@@ -11,12 +11,6 @@ import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { createBlog, fetchUserBlogs, updateBlog, likeBlog } from '../store/slice/blogSlice';
 
 
-interface BlogFormData {
-  title: string;
-  content: string;
-  excerpt: string;
-  tags: string[];
-}
 
 const UserBlogsPage = () => {
   const [blogs, setBlogs] = useState<Blog[]>([]);

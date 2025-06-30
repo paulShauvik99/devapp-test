@@ -10,7 +10,6 @@ import axios from 'axios';
 interface AuthState {
   user: User | null;
   token: string | null;
-  refreshToken: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
@@ -19,7 +18,6 @@ interface AuthState {
 const initialState: AuthState = {
   user: null,
   token: null,
-  refreshToken: null,
   isAuthenticated: false,
   isLoading: false,
   error: null,
@@ -48,102 +46,21 @@ export const registerUser = createAsyncThunk<AuthResponse, RegisterInput>(
   'auth/register',
   async (userData, { rejectWithValue }) => {
     try {
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(userData),
-      });
+      const response = await axios.post('/api/auth/register',  JSON.stringify(userData));
       
-      if (!response.ok) {
-        const error = await response.json();
-        return rejectWithValue(error.message || 'Registration failed');
+      console.log(response)
+      if (response.statusText !== 'Created') {
+        console.log(response)
+        const error = response.data.message || 'Registration failed';
+        return rejectWithValue(error);
       }
       
-      return await response.json();
+      return await response.data.data;
     } catch (error) {
       return rejectWithValue('Network error occurred');
     }
   }
 );
-
-export const refreshAuthToken = createAsyncThunk<string, void>(
-  'auth/refreshToken',
-  async (_, { getState, rejectWithValue }) => {
-    try {
-      const state = getState() as { auth: AuthState };
-      const refreshToken = state.auth.refreshToken;
-      
-      if (!refreshToken) {
-        return rejectWithValue('No refresh token available');
-      }
-      
-      const response = await fetch('/api/auth/refresh', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refreshToken }),
-      });
-      
-      if (!response.ok) {
-        return rejectWithValue('Token refresh failed');
-      }
-      
-      const data = await response.json();
-      return data.token;
-    } catch (error) {
-      return rejectWithValue('Network error occurred');
-    }
-  }
-);
-
-// NEW: Check authentication status
-export const checkAuthStatus = createAsyncThunk<AuthResponse | null, void>(
-  'auth/checkStatus',
-  async (_, { getState, rejectWithValue }) => {
-    try {
-      const state = getState() as { auth: AuthState };
-      const token = state.auth.token;
-      
-      // If no token, user is not authenticated
-      if (!token) {
-        return null;
-      }
-      
-      // Verify token with backend
-      const response = await fetch('/api/auth/verify', {
-        method: 'GET',
-        headers: { 
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json' 
-        },
-      });
-      
-      if (!response.ok) {
-        // Token is invalid, try to refresh
-        const refreshToken = state.auth.refreshToken;
-        if (refreshToken) {
-          const refreshResponse = await fetch('/api/auth/refresh', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ refreshToken }),
-          });
-          
-          if (refreshResponse.ok) {
-            const refreshData = await refreshResponse.json();
-            return refreshData;
-          }
-        }
-        
-        return rejectWithValue('Authentication expired');
-      }
-      
-      const userData = await response.json();
-      return userData;
-    } catch (error) {
-      return rejectWithValue('Network error occurred');
-    }
-  }
-);
-
 
 const authSlice = createSlice({
   name: 'auth',
@@ -152,7 +69,6 @@ const authSlice = createSlice({
     logout: (state) => {
       state.user = null;
       state.token = null;
-      state.refreshToken = null;
       state.isAuthenticated = false;
       state.error = null;
     },
@@ -202,32 +118,6 @@ const authSlice = createSlice({
       .addCase(registerUser.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
-      })
-      // Check auth status cases
-      .addCase(checkAuthStatus.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
-      .addCase(checkAuthStatus.fulfilled, (state, action) => {
-        state.isLoading = false;
-        if (action.payload) {
-          state.user = action.payload.user;
-          state.token = action.payload.token;
-          state.isAuthenticated = true;
-        } else {
-          // No valid authentication
-          state.user = null;
-          state.token = null;
-          state.refreshToken = null;
-          state.isAuthenticated = false;
-        }
-      })
-      .addCase(checkAuthStatus.rejected, (state) => {
-        state.isLoading = false;
-        state.user = null;
-        state.token = null;
-        state.refreshToken = null;
-        state.isAuthenticated = false;
       })
   },
 });

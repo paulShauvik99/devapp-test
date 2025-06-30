@@ -2,7 +2,6 @@ import { type ReactNode, useEffect } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
 import { Box, CircularProgress, Typography } from '@mui/material'
 import { useAppSelector, useAppDispatch } from '../../store/hooks'
-import { checkAuthStatus } from '../../store/slice/authSlice'
 
 interface ProtectedRouteProps {
   children: ReactNode
@@ -18,14 +17,6 @@ export const ProtectedRoute = ({
   const dispatch = useAppDispatch()
   const location = useLocation()
   const { isAuthenticated, isLoading, user } = useAppSelector((state) => state.auth)
-
-  useEffect(() => {
-    // Check authentication status on mount if not already authenticated
-    if (!isAuthenticated && !isLoading) {
-      dispatch(checkAuthStatus())
-    }
-  }, [dispatch, isAuthenticated, isLoading])
-
   // Show loading spinner while checking authentication
   if (isLoading) {
     return (

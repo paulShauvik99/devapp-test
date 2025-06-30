@@ -168,9 +168,6 @@ const CreateBlogModal: React.FC<CreateBlogModalProps> = ({ isOpen, onClose, onSa
       ...(formData.isPublished && !formData.publishedAt ? { publishedAt: new Date() } : {})
     };
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 500));
-
     const updatedBlogData: UpdateBlogInput = {
       title: blogData.title,
       content: blogData.content,
