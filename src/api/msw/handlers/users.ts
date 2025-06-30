@@ -1,7 +1,7 @@
 import { http, HttpResponse } from 'msw';
 import { mockBlogs, mockUsers } from '../data/mockData';
 import { createPaginatedResponse, createResponse } from '../utils/helpers';
-import type { BlogDetailResponse, SearchResponse, User, UserListResponse } from '../../../models';
+import type { Blog, BlogCreateResponse, BlogDetailResponse, SearchResponse, User, UserListResponse } from '../../../models';
 
 
 export const userHandlers = [
@@ -31,6 +31,40 @@ export const userHandlers = [
 
         const response = createResponse(null, '', 'Blog not found', false);
         return HttpResponse.json(response, { status: 404 });
+    }),
+
+
+    http.post('/api/users/:id/blogs', async ({ request, params }) => {
+        const body = await request.json() as Partial<Blog>;
+
+        if (!body.title || !body.content) {
+            const errorRes = createResponse(null, '', 'Title and content are required', false);
+            return HttpResponse.json(errorRes, { status: 400 });
+        }
+
+        const newBlog: Blog = {
+            id: `u${mockBlogs.length + 1}`,
+            title: body.title,
+            content: body.content,
+            excerpt: body.content.slice(0, 150),
+            tags: body.tags || [],
+            authorId: mockUsers[0].id,
+            isPublished: body.isPublished ?? false,
+            comments: [],
+            commentCount: 0,
+            likes: 0,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            publishedAt: body.isPublished ? new Date() : undefined,
+        };
+
+        mockBlogs.push(newBlog);
+
+        const mockUserIndex = mockUsers.findIndex(ele => ele.id === params.id);
+        mockUsers[mockUserIndex].blogs.push(newBlog);
+
+        const response: BlogCreateResponse = createResponse(newBlog, 'Blog created successfully');
+        return HttpResponse.json(response, { status: 201 });
     }),
 
 

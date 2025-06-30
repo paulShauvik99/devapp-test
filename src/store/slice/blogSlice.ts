@@ -122,12 +122,12 @@ export const fetchUserBlogs = createAsyncThunk<Blog[], string>(
   }
 );
 
-export const createBlog = createAsyncThunk<Blog, CreateBlogInput>(
+export const createBlog = createAsyncThunk<Blog,{ id: string; data: CreateBlogInput } >(
   'blogs/createBlog',
-  async (blogData, { rejectWithValue }) => {
+  async ({ id, data }, { rejectWithValue }) => {
     try {
-      const response = await axios.post('/api/blogs', blogData);
-      return response.data;
+      const response = await axios.post(`/api/users/${id}/blogs`, data);
+      return response.data.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to create blog');
     }
@@ -161,11 +161,14 @@ export const deleteBlog = createAsyncThunk<string, string>(
   }
 );
 
-export const likeBlog = createAsyncThunk<{ blogId: string; likes: number }, string>(
+export const likeBlog = createAsyncThunk<
+  { blogId: string; likes: number },              // return type
+  { blogId: string; likes: number }               // input payload type
+>(
   'blogs/likeBlog',
-  async (blogId, { rejectWithValue }) => {
+  async ({ blogId, likes }, { rejectWithValue }) => {
     try {
-      const response = await axios.post(`/api/blogs/${blogId}/like`);
+      const response = await axios.post(`/api/blogs/${blogId}/like/${likes}`);
       return { blogId, likes: response.data.likes };
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to like blog');

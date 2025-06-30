@@ -5,7 +5,7 @@ import {
   Bold, Italic, Link2, List, ListOrdered, Quote,
   Code, Image, Heading1, Heading2, Heading3
 } from 'lucide-react';
-import type { Blog, UpdateBlogInput } from '../models';
+import type { Blog, CreateBlogInput, UpdateBlogInput } from '../models';
 
 interface BlogFormData {
   id?: string;
@@ -171,14 +171,28 @@ const CreateBlogModal: React.FC<CreateBlogModalProps> = ({ isOpen, onClose, onSa
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 500));
 
-    const updatedBlogData : UpdateBlogInput = {
-      title : blogData.title,
+    const updatedBlogData: UpdateBlogInput = {
+      title: blogData.title,
       content: blogData.content,
-      tags : blogData.tags,
+      tags: blogData.tags,
       isPublished: true
     }
 
-    onSave(updatedBlogData);
+    const newBlogdata : CreateBlogInput = {
+      title: blogData.title,
+      content: blogData.content,
+      tags: blogData.tags || [],
+      isPublished: true
+    }
+
+    if (editBlogMode) {
+      onSave(updatedBlogData);
+    }else{
+      onSave(newBlogdata);
+    }
+
+
+
     setIsSaving(false);
     console.log(formData)
     //onClose();
@@ -296,8 +310,7 @@ const CreateBlogModal: React.FC<CreateBlogModalProps> = ({ isOpen, onClose, onSa
                           ul: ({ children }) => <ul className="list-disc list-inside mb-4 text-slate-700 dark:text-slate-300">{children}</ul>,
                           ol: ({ children }) => <ol className="list-decimal list-inside mb-4 text-slate-700 dark:text-slate-300">{children}</ol>,
                           li: ({ children }) => <li className="mb-1">{children}</li>,
-                          a: ({ href, children }) => <a href={href} className="text-blue-600 dark:text-blue-400 hover:underline">{children}</a>,
-                          img: ({ src, alt }) => <img src={src} alt={alt} className="max-w-full h-auto rounded-lg my-4" />
+                          a: ({ href, children }) => <a href={href} className="text-blue-600 dark:text-blue-400 hover:underline">{children}</a>
                         }}
                       >
                         {formData.content || '*Start writing your blog content...*'}
@@ -350,7 +363,7 @@ const CreateBlogModal: React.FC<CreateBlogModalProps> = ({ isOpen, onClose, onSa
                 </div>
               </div>
 
-              
+
 
               {/* Tags */}
               <div>

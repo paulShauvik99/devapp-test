@@ -17,8 +17,8 @@ export const blogHandlers = [
         const blog = mockBlogs.find((b) => b.id === params.id);
 
         if (blog) {
-        const response: BlogDetailResponse = createResponse(blog, 'Blog retrieved successfully');
-        return HttpResponse.json(response, { status: 200 });
+            const response: BlogDetailResponse = createResponse(blog, 'Blog retrieved successfully');
+            return HttpResponse.json(response, { status: 200 });
         }
 
         const response = createResponse(null, '', 'Blog not found', false);
@@ -57,7 +57,6 @@ export const blogHandlers = [
 
     http.put('/api/blogs/:id', async ({ params, request }) => {
         const blogIndex = mockBlogs.findIndex((b) => b.id === params.id);
-        console.log(blogIndex)
         const body = await request.json() as Partial<Blog>;
 
         if (blogIndex === -1) {
@@ -66,9 +65,6 @@ export const blogHandlers = [
         }
 
         const existingBlog = mockBlogs[blogIndex];
-
-        console.log(body)
-
         const updatedBlog: Blog = {
             ...existingBlog,
             title: body.title || existingBlog.title,
@@ -80,7 +76,6 @@ export const blogHandlers = [
             updatedAt: new Date(),
         };
 
-        console.log(updatedBlog.authorId)
 
         mockBlogs[blogIndex] = updatedBlog;
 
@@ -89,8 +84,6 @@ export const blogHandlers = [
 
         const mockUserIndex = mockUsers.findIndex(ele => ele.id === updatedBlog.authorId);
         mockUsers[mockUserIndex].blogs = blogs;
-
-
 
         const response: BlogUpdateResponse = createResponse(mockBlogs[blogIndex], 'Blog updated successfully');
         return HttpResponse.json(response, { status: 200 });
@@ -108,4 +101,36 @@ export const blogHandlers = [
         const response: BlogDeleteResponse = createResponse(null, 'Blog deleted successfully');
         return HttpResponse.json(response, { status: 200 });
     }),
+
+    http.post('/api/blogs/:id/like/:likeCount', async ({ params }) => {
+        const blogIndex = mockBlogs.findIndex((b) => b.id === params.id);
+        if (blogIndex === -1) {
+            const errorRes = createResponse(null, '', 'Blog not found', false);
+            return HttpResponse.json(errorRes, { status: 404 });
+        }
+
+        const likeCount = Number(params.likeCount);
+
+        if (isNaN(likeCount)) {
+            const errorRes = createResponse(null, '', 'Invalid like count', false);
+            return HttpResponse.json(errorRes, { status: 400 });
+        }
+
+        const existingBlog = mockBlogs[blogIndex];
+        const updatedBlog: Blog = {
+            ...existingBlog,
+            likes: likeCount + 1, 
+        };
+
+        mockBlogs[blogIndex] = updatedBlog;
+
+        const blogs = mockBlogs.filter(ele => ele.authorId === updatedBlog.authorId);
+        const mockUserIndex = mockUsers.findIndex(ele => ele.id === updatedBlog.authorId);
+        if (mockUserIndex !== -1) {
+            mockUsers[mockUserIndex].blogs = blogs;
+        }
+
+        const response = createResponse(null, 'Likes updated successfully');
+        return HttpResponse.json(response, { status: 200 });
+    })
 ];

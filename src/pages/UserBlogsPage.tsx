@@ -3,12 +3,12 @@ import {
   Search, Eye, Heart, MessageSquare, Calendar, Edit3, Trash2,
   Plus, Filter, Grid, List, MoreVertical, Tag, TrendingUp,
   Clock, User, ArrowLeft, Share2, Bookmark, Settings,
-  ChevronDown, ChevronUp, ExternalLink
+  ChevronDown, ChevronUp, ExternalLink, Send
 } from 'lucide-react';
 import CreateBlogModal from './CreateBlogPage';
-import type { Blog, UpdateBlogInput } from '../models';
+import type { Blog, CreateBlogInput, UpdateBlogInput, Comment } from '../models';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
-import { fetchUserBlogs, updateBlog } from '../store/slice/blogSlice';
+import { createBlog, fetchUserBlogs, updateBlog, likeBlog } from '../store/slice/blogSlice';
 
 
 interface BlogFormData {
@@ -24,6 +24,10 @@ const UserBlogsPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [expandedComments, setExpandedComments] = useState<Set<string>>(new Set());
+  const [showCommentForm, setShowCommentForm] = useState<Set<string>>(new Set());
+  const [commentTexts, setCommentTexts] = useState<Record<string, string>>({});
+  const [likedBlogs, setLikedBlogs] = useState<Set<string>>(new Set());
+  const [likingBlogs, setLikingBlogs] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editBlog, setEditBlog] = useState<Blog | {}>({});
@@ -31,7 +35,6 @@ const UserBlogsPage = () => {
 
   const dispatch = useAppDispatch();
   const blogList = useAppSelector(state => state.blogs.userBlogs);
-
   useEffect(() => {
     dispatch(fetchUserBlogs('u1'));
   }, [dispatch]);
@@ -56,6 +59,7 @@ const UserBlogsPage = () => {
         blog.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
       );
     }
+    setFilteredBlogs(filtered);
   }, [blogs, searchQuery]);
 
   const toggleComments = (blogId: string) => {
@@ -66,6 +70,127 @@ const UserBlogsPage = () => {
       newExpanded.add(blogId);
     }
     setExpandedComments(newExpanded);
+  };
+
+  const toggleCommentForm = (blogId: string) => {
+    const newShowForm = new Set(showCommentForm);
+    if (newShowForm.has(blogId)) {
+      newShowForm.delete(blogId);
+      // Clear the comment text when hiding the form
+      setCommentTexts(prev => ({ ...prev, [blogId]: '' }));
+    } else {
+      newShowForm.add(blogId);
+    }
+    setShowCommentForm(newShowForm);
+  };
+
+  const handleCommentTextChange = (blogId: string, text: string) => {
+    setCommentTexts(prev => ({ ...prev, [blogId]: text }));
+  };
+
+  const handleAddComment = (blogId: string) => {
+    const commentText = commentTexts[blogId]?.trim();
+    if (!commentText) return;
+
+    // Create a new comment object that matches the Comment interface
+    const newComment: Comment = {
+      id: `comment_${Date.now()}`, // Simple ID generation
+      content: commentText,
+      blogId: blogId,
+      authorName: 'Current User', // You can replace this with actual user data
+      parentId: undefined, // Top-level comment
+      replies: [], // Initialize empty replies array
+      replyCount: 0,
+      likes: 0,
+      createdAt: new Date()
+    };
+
+    // Update the blogs state to include the new comment
+    setBlogs(prevBlogs => 
+      prevBlogs.map(blog => {
+        if (blog.id === blogId) {
+          return {
+            ...blog,
+            comments: [...blog.comments, newComment]
+          };
+        }
+        return blog;
+      })
+    );
+
+    // Update filtered blogs as well
+    setFilteredBlogs(prevFiltered => 
+      prevFiltered.map(blog => {
+        if (blog.id === blogId) {
+          return {
+            ...blog,
+            comments: [...blog.comments, newComment]
+          };
+        }
+        return blog;
+      })
+    );
+
+    // Clear the comment form
+    setCommentTexts(prev => ({ ...prev, [blogId]: '' }));
+    setShowCommentForm(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(blogId);
+      return newSet;
+    });
+
+    // Ensure comments section is expanded
+    setExpandedComments(prev => new Set([...prev, blogId]));
+
+    // TODO: Here you would typically dispatch an action to save the comment to your backend
+    // dispatch(addComment({ blogId, comment: newComment }));
+  };
+
+  const handleLikeBlog = async (blogId: string, likes : number) => {
+    // Prevent multiple clicks while processing
+    if (likingBlogs.has(blogId)) return;
+
+    setLikingBlogs(prev => new Set([...prev, blogId]));
+
+    try {
+      // Dispatch the likeBlog action
+      const result = await dispatch(likeBlog({blogId, likes}));
+      
+      if (likeBlog.fulfilled.match(result)) {
+        // Update the local state to reflect the new likes count
+        const { likes } = result.payload;
+        
+        // Update both blogs and filteredBlogs arrays
+        const updateBlogLikes = (blog: Blog) => {
+          if (blog.id === blogId) {
+            return { ...blog, likes };
+          }
+          return blog;
+        };
+
+        setBlogs(prev => prev.map(updateBlogLikes));
+        setFilteredBlogs(prev => prev.map(updateBlogLikes));
+
+        // Toggle the liked state
+        setLikedBlogs(prev => {
+          const newLiked = new Set(prev);
+          if (newLiked.has(blogId)) {
+            newLiked.delete(blogId);
+          } else {
+            newLiked.add(blogId);
+          }
+          return newLiked;
+        });
+      }
+    } catch (error) {
+      console.error('Failed to like/unlike blog:', error);
+    } finally {
+      setLikingBlogs(prev => {
+        const newLiking = new Set(prev);
+        newLiking.delete(blogId);
+        return newLiking;
+      });
+    }
   };
 
   const formatDate = (date: Date | string) => {
@@ -82,11 +207,15 @@ const UserBlogsPage = () => {
     }).format(parsedDate);
   };
 
-  const handleSaveBlog = (blogData: UpdateBlogInput) => {
-    console.log('Blog saved:', blogData);
-    dispatch(updateBlog({ id: (editBlog as Blog).id, data: blogData }));
+  const handleSaveBlog = (blogData: UpdateBlogInput | CreateBlogInput) => {
+    if(editBlogMode){
+      dispatch(updateBlog({ id: (editBlog as Blog).id, data: blogData }));
+    }else{
+      dispatch(createBlog({ id: 'u1', data: blogData as CreateBlogInput }));
+    }
     setTimeout(() => { dispatch(fetchUserBlogs('u1')); }, 100)
     setIsModalOpen(false);
+    setEditBlogMode(false);
   };
 
   const openEditBlogModal = (blogId: any) => {
@@ -214,14 +343,27 @@ const UserBlogsPage = () => {
                     {/* Stats */}
                     <div className="flex items-center justify-between text-sm text-slate-500 dark:text-slate-400">
                       <div className="flex items-center space-x-4">
-                        <div className="flex items-center space-x-1">
-                          <Heart className="w-4 h-4" />
+                        {/* <button 
+                          className={`flex items-center space-x-1 transition-colors ${
+                            likedBlogs.has(blog.id) 
+                              ? 'text-red-500 hover:text-red-600' 
+                              : 'hover:text-red-500'
+                          } ${likingBlogs.has(blog.id) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          onClick={() => handleLikeBlog(blog.id, blog.likes)}
+                          disabled={likingBlogs.has(blog.id)}
+                        >
+                          <Heart 
+                            className={`w-4 h-4 ${likedBlogs.has(blog.id) ? 'fill-current' : ''}`} 
+                          />
                           <span>{blog.likes}</span>
-                        </div>
-                        <div className="flex items-center space-x-1">
+                        </button> */}
+                        <button 
+                          className="flex items-center space-x-1 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                          onClick={() => toggleCommentForm(blog.id)}
+                        >
                           <MessageSquare className="w-4 h-4" />
                           <span>{blog.comments.length}</span>
-                        </div>
+                        </button>
                       </div>
                       <div className="flex items-center space-x-2">
                         <button className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors" onClick={() => { openEditBlogModal(blog.id) }}>
@@ -233,6 +375,47 @@ const UserBlogsPage = () => {
                       </div>
                     </div>
                   </div>
+
+                  {/* Add Comment Form */}
+                  {showCommentForm.has(blog.id) && (
+                    <div className="border-t border-slate-200 dark:border-slate-700 px-6 py-4">
+                      <div className="flex space-x-3">
+                        <div className="w-8 h-8 bg-slate-200 dark:bg-slate-600 rounded-full flex items-center justify-center flex-shrink-0">
+                          <User className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+                        </div>
+                        <div className="flex-1">
+                          <textarea
+                            value={commentTexts[blog.id] || ''}
+                            onChange={(e) => handleCommentTextChange(blog.id, e.target.value)}
+                            placeholder="Write a comment..."
+                            className="w-full p-3 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 resize-none"
+                            rows={3}
+                          />
+                          <div className="flex items-center justify-between mt-2">
+                            <span className="text-xs text-slate-400">
+                              {commentTexts[blog.id]?.length || 0}/500
+                            </span>
+                            <div className="flex items-center space-x-2">
+                              <button
+                                onClick={() => toggleCommentForm(blog.id)}
+                                className="px-3 py-1 text-sm text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors"
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                onClick={() => handleAddComment(blog.id)}
+                                disabled={!commentTexts[blog.id]?.trim()}
+                                className="flex items-center space-x-1 px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:bg-slate-300 dark:disabled:bg-slate-600 disabled:cursor-not-allowed transition-colors"
+                              >
+                                <Send className="w-3 h-3" />
+                                <span>Post</span>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Comments Section */}
                   {blog.comments.length > 0 && (
@@ -255,11 +438,9 @@ const UserBlogsPage = () => {
                         <div className="px-6 pb-4 space-y-4 max-h-48 overflow-y-auto">
                           {blog.comments.map((comment) => (
                             <div key={comment.id} className="flex space-x-3">
-                              {/* <img
-                                src={comment.authorAvatar}
-                                alt={comment.authorName}
-                                className="w-8 h-8 rounded-full object-cover flex-shrink-0"
-                              /> */}
+                              <div className="w-8 h-8 bg-slate-200 dark:bg-slate-600 rounded-full flex items-center justify-center flex-shrink-0">
+                                <User className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+                              </div>
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center space-x-2 mb-1">
                                   <span className="text-sm font-medium text-slate-900 dark:text-white">
