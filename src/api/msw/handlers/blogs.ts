@@ -57,6 +57,7 @@ export const blogHandlers = [
 
     http.put('/api/blogs/:id', async ({ params, request }) => {
         const blogIndex = mockBlogs.findIndex((b) => b.id === params.id);
+        console.log(blogIndex)
         const body = await request.json() as Partial<Blog>;
 
         if (blogIndex === -1) {
@@ -65,6 +66,8 @@ export const blogHandlers = [
         }
 
         const existingBlog = mockBlogs[blogIndex];
+
+        console.log(body)
 
         const updatedBlog: Blog = {
             ...existingBlog,
@@ -77,9 +80,19 @@ export const blogHandlers = [
             updatedAt: new Date(),
         };
 
+        console.log(updatedBlog.authorId)
+
         mockBlogs[blogIndex] = updatedBlog;
 
-        const response: BlogUpdateResponse = createResponse(updatedBlog, 'Blog updated successfully');
+
+        const blogs = mockBlogs.filter(ele => ele.authorId === updatedBlog.authorId);
+
+        const mockUserIndex = mockUsers.findIndex(ele => ele.id === updatedBlog.authorId);
+        mockUsers[mockUserIndex].blogs = blogs;
+
+
+
+        const response: BlogUpdateResponse = createResponse(mockBlogs[blogIndex], 'Blog updated successfully');
         return HttpResponse.json(response, { status: 200 });
     }),
 

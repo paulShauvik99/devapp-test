@@ -2,7 +2,7 @@ export interface Comment {
     id: string;
     content: string;
     blogId: string;
-    authorId: string;
+    authorName: string;
     parentId?: string; 
     replies?: Comment[];
     replyCount: number;

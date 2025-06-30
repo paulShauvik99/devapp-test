@@ -1,7 +1,7 @@
 import { http, HttpResponse } from 'msw';
-import { mockUsers } from '../data/mockData';
+import { mockBlogs, mockUsers } from '../data/mockData';
 import { createPaginatedResponse, createResponse } from '../utils/helpers';
-import type { SearchResponse, UserListResponse } from '../../../models';
+import type { BlogDetailResponse, SearchResponse, User, UserListResponse } from '../../../models';
 
 
 export const userHandlers = [
@@ -18,6 +18,19 @@ export const userHandlers = [
         );
 
         return HttpResponse.json(response, { status: 200 });
+    }),
+
+    http.get('/api/users/:id/blogs', ({ params }) => {
+        console.log(mockUsers)
+        const user = mockUsers.find((b) => b.id === params.id) as User;
+
+        if (user.blogs) {
+            const response = createResponse(user.blogs, 'Blog retrieved successfully');
+            return HttpResponse.json(response, { status: 200 });
+        }
+
+        const response = createResponse(null, '', 'Blog not found', false);
+        return HttpResponse.json(response, { status: 404 });
     }),
 
 

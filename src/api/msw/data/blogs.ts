@@ -71,7 +71,7 @@ export const mockBlogs: Blog[] = [
         title: 'Building Scalable APIs with Node.js and Express',
         content:
         'Building scalable APIs requires a well-structured backend architecture. In this post, we explore key principles using Node.js and Express such as modular routing, middleware composition, error handling, and request validation. We also cover rate limiting, token-based authentication, and how to prepare your Express app for future scaling with tools like Redis, message queues, and containerization.',
-        authorId: 'u2',
+        authorId: 'u1',
         excerpt: 'Scalable API design using Node.js and Express, with middleware and modular routing...',
         tags: ['Node.js', 'Express', 'Backend', 'API'],
         isPublished: true,

@@ -2,24 +2,24 @@ import { Routes, Route, useLocation } from 'react-router-dom'
 import { useEffect } from 'react'
 import { useDispatch } from 'react-redux'
 import { CssBaseline, ThemeProvider } from '@mui/material'
-import  Navbar  from './components/layout/Navbar'
-import  Footer  from './components/layout/Footer'
+import Navbar from './components/layout/Navbar'
+import Footer from './components/layout/Footer'
 import { useAppSelector } from './store/hooks'
 import { initializeTheme } from './store/slice/themeSlice'
 import { ProtectedRoute } from './components/auth/ProtectedRoute'
 import { lightTheme, darkTheme } from './styles/theme'
 
 // Pages
-import  HomePage  from './pages/HomePage'
-import  DeveloperListPage  from './pages/DeveloperListPage'
-import  DeveloperProfilePage  from './pages/DeveloperProfilePage'
-import  BlogListPage  from './pages/BlogListPage'
-import  UserBlogsPage  from './pages/UserBlogsPage'
-import  CreateBlogPage  from './pages/CreateBlogPage'
-import  EditBlogPage  from './pages/EditBlogPage'
-import  LoginPage  from './pages/LoginPage'
-import  RegisterPage  from './pages/RegisterPage'
-import  NotFoundPage  from './pages/NotFoundPage'
+import HomePage from './pages/HomePage'
+import DeveloperListPage from './pages/DeveloperListPage'
+import DeveloperProfilePage from './pages/DeveloperProfilePage'
+import BlogListPage from './pages/BlogListPage'
+import UserBlogsPage from './pages/UserBlogsPage'
+import CreateBlogPage from './pages/CreateBlogPage'
+import EditBlogPage from './pages/EditBlogPage'
+import LoginPage from './pages/LoginPage'
+import RegisterPage from './pages/RegisterPage'
+import NotFoundPage from './pages/NotFoundPage'
 
 function App() {
   const dispatch = useDispatch()
@@ -39,7 +39,7 @@ function App() {
       <div className="min-h-screen flex flex-col">
         {/* Conditionally render Navbar */}
         {!isAuthPage && <Navbar />}
-        
+
         <main className="flex-1">
           <Routes>
             {/* Public Routes */}
@@ -47,7 +47,7 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
 
-            {/* Protected Routes */}
+            {/* Protected Routes 
             <Route
               path="/blogs/create"
               element={
@@ -56,6 +56,7 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            */}
             <Route
               path="/blogs/:id/edit"
               element={
@@ -74,7 +75,7 @@ function App() {
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </main>
-        
+
         {/* Conditionally render Footer */}
         {!isAuthPage && <Footer />}
       </div>
