@@ -73,8 +73,7 @@ const Navbar: React.FC = () => {
     { name: 'Home', href: '/', icon: Home },
     { name: 'Developers', href: '/developers', icon: Users },
     { name: 'Blogs', href: '/blogs', icon: BookOpen },
-    { name: 'View Blogs', href: '/blogs/b1/view', icon: BookOpen },
-    //{ name: 'My Blogs', href: '/developers/my-blogs', icon: BookOpen },
+    { name: 'My Blogs', href: '/my-blogs', icon: BookOpen },
   ];
 
   // Navigation links for guests

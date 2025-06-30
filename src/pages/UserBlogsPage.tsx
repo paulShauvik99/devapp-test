@@ -1,26 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Search, Eye, Heart, MessageSquare, Calendar, Edit3, Trash2,
-  Plus, Filter, Grid, List, MoreVertical, Tag, TrendingUp,
-  Clock, User, ArrowLeft, Share2, Bookmark, Settings,
-  ChevronDown, ChevronUp, ExternalLink, Send, Sparkles,
-  BarChart3, BookOpen, ThumbsUp
+  Search, Eye, MessageSquare, Edit3, Trash2,
+  Plus,  MoreVertical, Tag, User, Send,
 } from 'lucide-react';
 import CreateBlogModal from './CreateBlogPage';
 import type { Blog, CreateBlogInput, UpdateBlogInput, Comment } from '../models';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
-import { createBlog, fetchUserBlogs, updateBlog, likeBlog, createComment } from '../store/slice/blogSlice';
+import { createBlog, fetchUserBlogs, updateBlog, likeBlog, createComment, deleteBlog } from '../store/slice/blogSlice';
+import { useNavigate } from 'react-router-dom';
 
 const UserBlogsPage = () => {
   const [blogs, setBlogs] = useState<Blog[]>([]);
   const [filteredBlogs, setFilteredBlogs] = useState<Blog[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [expandedComments, setExpandedComments] = useState<Set<string>>(new Set());
   const [showCommentForm, setShowCommentForm] = useState<Set<string>>(new Set());
   const [commentTexts, setCommentTexts] = useState<Record<string, string>>({});
-  const [likedBlogs, setLikedBlogs] = useState<Set<string>>(new Set());
-  const [likingBlogs, setLikingBlogs] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editBlog, setEditBlog] = useState<Blog | {}>({});
@@ -30,7 +25,8 @@ const UserBlogsPage = () => {
   const dispatch = useAppDispatch();
   const blogList = useAppSelector(state => state.blogs.userBlogs);
   const user = useAppSelector(state => state.auth.user);
-  console.log(user)
+
+  const naviate = useNavigate();
 
   useEffect(() => {
     dispatch(fetchUserBlogs(user!.id));
@@ -132,11 +128,12 @@ const UserBlogsPage = () => {
 
   const handleViewBlog = (blogId: Blog['id']) => {
     console.log('Viewing blog:', blogId);
-    setDropdownOpen(null); // Close dropdown after action
+    naviate(`/blogs/${blogId}/view`);
   };
 
   const handleDeleteBlog = (blogId: Blog['id']) => {
     console.log('Deleting blog:', blogId);
+     dispatch(deleteBlog(blogId));
     setDropdownOpen(null); // Close dropdown after action
   };
 

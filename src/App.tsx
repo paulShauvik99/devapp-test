@@ -71,7 +71,7 @@ function App() {
                 <BlogListPage />
               </ProtectedRoute>
               } />
-            <Route path="/developers/my-blogs" element={
+            <Route path="/my-blogs" element={
               <ProtectedRoute>
                 <UserBlogsPage />
               </ProtectedRoute>

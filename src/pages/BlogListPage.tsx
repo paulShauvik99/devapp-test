@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Search, Filter, Heart, Eye, MessageCircle, Calendar, User, Plus, Trash2, Edit, BookOpen } from 'lucide-react';
+import { Search, Filter, Heart, Eye, MessageCircle, Calendar, User, Plus, Trash2, Edit, BookOpen, MessageSquare, Tag } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { fetchBlogs } from '../store/slice/blogSlice';
+import { useNavigate } from 'react-router-dom';
 
 
 interface BlogFilters {
@@ -107,30 +108,22 @@ const mockInitialState = {
   }
 };
 
-// Mock actions
-const mockActions = {
-  fetchBlogs: (filters: BlogFilters) => ({ type: 'blogs/fetchBlogs', payload: filters }),
-  likeBlog: (blogId: string) => ({ type: 'blogs/likeBlog', payload: blogId }),
-  deleteBlog: (blogId: string) => ({ type: 'blogs/deleteBlog', payload: blogId }),
-  setSearchFilters: (filters: BlogFilters) => ({ type: 'blogs/setSearchFilters', payload: filters })
-};
-
 const BlogPage = () => {
   const dispatch = useAppDispatch();
-  const blogList = useAppSelector(state => state.blogs)
-
-  console.log(blogList)
   
   // In a real app, these would come from useSelector
-  const [state, setState] = useState(mockInitialState);
-  const { blogs, isLoading, searchFilters, pagination } = state.blogs;
-  const { user, isAuthenticated } = state.auth;
+  const blogState = useAppSelector(state => state.blogs);
+  const { blogs, isLoading, searchFilters, pagination } = blogState;
+
+  console.log(blogState)
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState('createdAt');
   const [sortOrder, setSortOrder] = useState('desc');
   const [showFilters, setShowFilters] = useState(false);
+
+  const naviate = useNavigate();
 
   // Get unique tags from all blogs
   const allTags = [...new Set(blogs.flatMap(blog => blog.tags))];
@@ -169,11 +162,13 @@ const toggleTag = (tag: string): void => {
   );
 };
 
+  const handleViewBlog = (blogId: Blog['id']) => {
+    console.log('Viewing blog:', blogId);
+    naviate(`/blogs/${blogId}/view`);
+  };
+
   useEffect(() => {
-    //handleSearch();
-
-    dispatch(fetchBlogs())
-
+    dispatch(fetchBlogs({ page: 1, limit: 6 }));
   }, [dispatch]);
 
   if (isLoading) {
@@ -188,39 +183,12 @@ const toggleTag = (tag: string): void => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center space-x-4">
-              <BookOpen className="h-8 w-8 text-blue-600" />
-              <h1 className="text-2xl font-bold text-gray-900">Blog Hub</h1>
-            </div>
-            
-            {isAuthenticated && (
-              <div className="flex items-center space-x-4">
-                <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2">
-                  <Plus className="h-4 w-4" />
-                  <span>New Blog</span>
-                </button>
-                <div className="flex items-center space-x-2">
-                  <img
-                    src={user.avatar}
-                    alt={user.name}
-                    className="h-8 w-8 rounded-full"
-                  />
-                  <span className="text-sm font-medium text-gray-700">{user.name}</span>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </header>
+    <div className="min-[500px] bg-gray-50 pt-[65px] dark:bg-slate-900">
+     
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Search and Filters */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
+        <div className="bg-white rounded-lg shadow-sm p-6 mb-8 dark:bg-slate-800">
           <div className="flex flex-col lg:flex-row gap-4">
             {/* Search Input */}
             <div className="flex-1">
@@ -231,7 +199,7 @@ const toggleTag = (tag: string): void => {
                   placeholder="Search blogs..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-slate-700"
                   onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                 />
               </div>
@@ -239,25 +207,7 @@ const toggleTag = (tag: string): void => {
 
             {/* Sort Controls */}
             <div className="flex gap-2">
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="createdAt">Date</option>
-                <option value="likes">Likes</option>
-                <option value="views">Views</option>
-                <option value="title">Title</option>
-              </select>
-              
-              <select
-                value={sortOrder}
-                onChange={(e) => setSortOrder(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="desc">Newest</option>
-                <option value="asc">Oldest</option>
-              </select>
+             
 
               <button
                 onClick={() => setShowFilters(!showFilters)}
@@ -301,85 +251,63 @@ const toggleTag = (tag: string): void => {
 
         {/* Blog Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {blogList.blogs.map(blog => (
-            <article
-              key={blog.id}
-              className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow overflow-hidden border"
-            >
-              
-              
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center space-x-2">
-                    {/* <img
-                      src={blog.author.avatar}
-                      alt={blog.author.name}
-                      className="h-6 w-6 rounded-full"
-                    /> */}
-                    <span className="text-sm text-gray-600">{blog.authorId}</span>
-                  </div>
-                  
-                  {isAuthenticated && user.id === blog.authorId && (
-                    <div className="flex space-x-1">
-                      <button className="p-1 text-gray-400 hover:text-blue-600 transition-colors">
-                        <Edit className="h-4 w-4" />
-                      </button>
-                      <button
-                        //onClick={() => handleDelete(blog.id)}
-                        className="p-1 text-gray-400 hover:text-red-600 transition-colors"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+          {blogs.map((blog) => (
+                <div key={blog.id} className={`group bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:shadow-lg hover:border-blue-200 dark:hover:border-blue-700 transition-all duration-300`}>
+
+                  {/* Main Content */}
+                  <div className={`p-6`}>
+                    {/* Header Row */}
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-center space-x-3">
+                        {/* Status Badge */}
+                        <span className="inline-flex items-center px-2.5 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded-lg text-xs font-medium">
+                          <div className="w-2 h-2 bg-emerald-500 rounded-full mr-2"></div>
+                          Published
+                        </span>
+                        <span className="text-sm text-slate-500 dark:text-slate-400">
+                          {formatDate(blog.createdAt)}
+                        </span>
+                      </div>
+                     
                     </div>
-                  )}
-                </div>
 
-                <h2 className="text-xl font-semibold text-gray-900 mb-2 line-clamp-2">
-                  {blog.title}
-                </h2>
-                
-                <p className="text-gray-600 text-sm mb-4 line-clamp-3">
-                  {blog.excerpt}
-                </p>
-
-                <div className="flex flex-wrap gap-1 mb-4">
-                  {blog.tags.map(tag => (
-                    <span
-                      key={tag}
-                      className="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-full"
+                    {/* Title */}
+                    <h3
+                      className="text-xl font-bold text-slate-900 dark:text-white mb-3 line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors cursor-pointer leading-snug"
+                      onClick={() => handleViewBlog(blog.id)}
                     >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
+                      {blog.title}
+                    </h3>
 
-                <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
-                  <div className="flex items-center space-x-1">
-                    <Calendar className="h-4 w-4" />
-                    <span>{formatDate(blog.createdAt)}</span>
-                  </div>
-                </div>
+                    {/* Excerpt */}
+                    <p className="text-slate-600 dark:text-slate-400 line-clamp-3 mb-6 leading-relaxed text-sm">
+                      {blog.excerpt}
+                    </p>
 
-                <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                  <div className="flex items-center space-x-4 text-sm text-gray-500">
-                   
-                    <span className="flex items-center space-x-1">
-                      <MessageCircle className="h-4 w-4" />
-                      <span>{blog.commentCount}</span>
-                    </span>
+                    {/* Tags */}
+                    {blog.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {blog.tags.slice(0, 3).map((tag, index) => (
+                          <span
+                            key={index}
+                            className="inline-flex items-center px-3 py-1.5 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-medium hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors cursor-pointer"
+                          >
+                            <Tag className="w-3 h-3 mr-1.5" />
+                            {tag}
+                          </span>
+                        ))}
+                        {blog.tags.length > 3 && (
+                          <span className="inline-flex items-center px-3 py-1.5 bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 rounded-lg text-xs font-medium">
+                            +{blog.tags.length - 3} more
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
-                  
-                  <button
-                    //onClick={() => handleLike(blog.id)}
-                    className="flex items-center space-x-1 text-sm text-gray-500 hover:text-red-500 transition-colors"
-                  >
-                    <Heart className="h-4 w-4" />
-                    <span>{blog.likes}</span>
-                  </button>
+
+                 
                 </div>
-              </div>
-            </article>
-          ))}
+              ))}
         </div>
 
         {/* Pagination */}
