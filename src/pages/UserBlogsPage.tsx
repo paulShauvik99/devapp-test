@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   Search, Eye, MessageSquare, Edit3, Trash2,
-  Plus,  MoreVertical, Tag, User, Send,
+  Plus, MoreVertical, Tag, User, Send,
 } from 'lucide-react';
 import CreateBlogModal from './CreateBlogPage';
 import type { Blog, CreateBlogInput, UpdateBlogInput, Comment } from '../models';
@@ -25,6 +25,9 @@ const UserBlogsPage = () => {
   const dispatch = useAppDispatch();
   const blogList = useAppSelector(state => state.blogs.userBlogs);
   const user = useAppSelector(state => state.auth.user);
+  const userBlogs = useAppSelector(state => state.blogs)
+
+  console.log(userBlogs)
 
   const naviate = useNavigate();
 
@@ -101,11 +104,11 @@ const UserBlogsPage = () => {
       parentId: undefined
     };
 
-    dispatch(createComment({blogId, commentData : newComment}));
+    dispatch(createComment({ blogId, commentData: newComment }));
 
     setTimeout(() => { dispatch(fetchUserBlogs(user!.id)); }, 100)
     setCommentTexts(prev => ({ ...prev, [blogId]: "" }));
-    
+
   };
 
   const formatDate = (date: Date | string) => {
@@ -133,7 +136,7 @@ const UserBlogsPage = () => {
 
   const handleDeleteBlog = (blogId: Blog['id']) => {
     console.log('Deleting blog:', blogId);
-     dispatch(deleteBlog(blogId));
+    dispatch(deleteBlog(blogId));
     setDropdownOpen(null); // Close dropdown after action
   };
 
@@ -157,6 +160,8 @@ const UserBlogsPage = () => {
       setDropdownOpen(null); // Close dropdown after action
     }
   }
+
+
 
   if (isLoading) {
     return (
@@ -429,6 +434,8 @@ const UserBlogsPage = () => {
               ))}
             </div>
           )}
+
+
         </div>
       </div>
 

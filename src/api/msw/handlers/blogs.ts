@@ -6,12 +6,59 @@ import type { Blog, BlogCreateResponse, BlogDeleteResponse, BlogDetailResponse, 
 export const blogHandlers = [
     http.get('/api/blogs', ({ request }) => {
         const url = new URL(request.url);
-        const page = parseInt(url.searchParams.get('page') || '1');
-        const limit = parseInt(url.searchParams.get('limit') || '10');
 
-        const response: BlogListResponse = createPaginatedResponse(mockBlogs, page, limit, mockBlogs, 'Blogs retrieved successfully');
+        // Pagination
+        const page = parseInt(url.searchParams.get('page') || '1', 10);
+        const limit = parseInt(url.searchParams.get('limit') || '10', 10);
+
+        // Filters
+        const search = url.searchParams.get('search')?.toLowerCase() || '';
+        const tags = url.searchParams.get('tags')?.split(',') || [];
+
+        // Step 1: Filter
+        let filtered = [...mockBlogs];
+
+        if (search) {
+            filtered = filtered.filter(blog =>
+                blog.title.toLowerCase().includes(search) ||
+                blog.excerpt.toLowerCase().includes(search)
+            );
+        }
+
+        if (tags.length > 0 && tags[0] !== '') {
+            filtered = filtered.filter(blog =>
+                tags.some(tag => blog.tags.includes(tag))
+            );
+        }
+
+      
+        // Step 2: Paginate
+        const start = (page - 1) * limit;
+        const end = start + limit;
+        const paginatedItems = filtered.slice(start, end);
+
+        // Step 4: Build response
+        const totalItems = filtered.length;
+        const totalPages = Math.ceil(totalItems / limit);
+
+        const response: BlogListResponse = {
+            success: true,
+            successMessage: 'Blogs retrieved successfully',
+            failureMessage: '',
+            data: paginatedItems,
+            pagination: {
+                currentPage: page,
+                totalPages,
+                totalItems,
+                hasNext: page < totalPages,
+                hasPrev: page > 1,
+                limit,
+            },
+        };
+
         return HttpResponse.json(response, { status: 200 });
     }),
+
 
     http.get('/api/blogs/:id', ({ params }) => {
         const blog = mockBlogs.find((b) => b.id === params.id);
@@ -119,7 +166,7 @@ export const blogHandlers = [
         const existingBlog = mockBlogs[blogIndex];
         const updatedBlog: Blog = {
             ...existingBlog,
-            likes: likeCount + 1, 
+            likes: likeCount + 1,
         };
 
         mockBlogs[blogIndex] = updatedBlog;

@@ -1,17 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { Search, Filter, Heart, Eye, MessageCircle, Calendar, User, Plus, Trash2, Edit, BookOpen, MessageSquare, Tag } from 'lucide-react';
+import { Search, Filter,  BookOpen, Tag, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { fetchBlogs } from '../store/slice/blogSlice';
 import { useNavigate } from 'react-router-dom';
+import { mockBlogs } from '../api/msw';
 
 
-interface BlogFilters {
-  category?: string;
-  author?: string;
-  searchTerm?: string;
-  [key: string]: unknown; // if you're allowing dynamic keys
-}
 
 
 type Blog = {
@@ -27,122 +21,37 @@ type BlogsState = {
   blogs: Blog[];
 };
 
-type AppState = {
-  blogs: BlogsState;
-  // add other parts of your state here if needed
-};
-
-// Mock Redux store structure (in real app, this would come from your store)
-const mockInitialState = {
-  auth: {
-    user: { id: '1', name: 'John Doe', avatar: '/api/placeholder/40/40' },
-    isAuthenticated: true,
-    isLoading: false
-  },
-  blogs: {
-    blogs: [
-      {
-        id: '1',
-        title: 'Getting Started with React and Redux',
-        content: 'Learn the fundamentals of building scalable applications with React and Redux. This comprehensive guide covers everything from basic setup to advanced patterns...',
-        excerpt: 'Learn the fundamentals of building scalable applications with React and Redux.',
-        author: { id: '1', name: 'John Doe', avatar: '/api/placeholder/32/32' },
-        tags: ['React', 'Redux', 'JavaScript'],
-        createdAt: '2024-01-15T10:00:00Z',
-        updatedAt: '2024-01-15T10:00:00Z',
-        likes: 42,
-        views: 1337,
-        commentCount: 8,
-        featured: true,
-        published: true
-      },
-      {
-        id: '2',
-        title: 'Modern CSS Techniques for 2024',
-        content: 'Explore the latest CSS features and techniques that will revolutionize your web development workflow. From container queries to advanced grid layouts...',
-        excerpt: 'Explore the latest CSS features and techniques for modern web development.',
-        author: { id: '2', name: 'Jane Smith', avatar: '/api/placeholder/32/32' },
-        tags: ['CSS', 'Web Design', 'Frontend'],
-        createdAt: '2024-01-14T14:30:00Z',
-        updatedAt: '2024-01-14T14:30:00Z',
-        likes: 28,
-        views: 892,
-        commentCount: 12,
-        featured: false,
-        published: true
-      },
-      {
-        id: '3',
-        title: 'Building Scalable Node.js Applications',
-        content: 'Discover best practices for architecting and building enterprise-grade Node.js applications. Learn about microservices, database optimization, and deployment strategies...',
-        excerpt: 'Best practices for building enterprise-grade Node.js applications.',
-        author: { id: '3', name: 'Mike Johnson', avatar: '/api/placeholder/32/32' },
-        tags: ['Node.js', 'Backend', 'Architecture'],
-        createdAt: '2024-01-13T09:15:00Z',
-        updatedAt: '2024-01-13T09:15:00Z',
-        likes: 35,
-        views: 654,
-        commentCount: 5,
-        featured: true,
-        published: true
-      }
-    ],
-    featuredBlogs: [],
-    isLoading: false,
-    searchFilters: {
-      page: 1,
-      limit: 10,
-      sortBy: 'createdAt',
-      sortOrder: 'desc',
-      search: '',
-      tags: []
-    },
-    pagination: {
-      currentPage: 1,
-      totalPages: 1,
-      totalItems: 3,
-      hasNext: false,
-      hasPrev: false,
-      limit: 10
-    }
-  }
-};
 
 const BlogPage = () => {
   const dispatch = useAppDispatch();
-  
+
   // In a real app, these would come from useSelector
   const blogState = useAppSelector(state => state.blogs);
   const { blogs, isLoading, searchFilters, pagination } = blogState;
 
-  console.log(blogState)
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [sortBy, setSortBy] = useState('createdAt');
-  const [sortOrder, setSortOrder] = useState('desc');
   const [showFilters, setShowFilters] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const { isDarkMode } = useAppSelector(state => state.theme);
 
   const naviate = useNavigate();
 
   // Get unique tags from all blogs
-  const allTags = [...new Set(blogs.flatMap(blog => blog.tags))];
+  const allTags = [...new Set(mockBlogs.flatMap(blog => blog.tags))];
 
-  
+
   const handleSearch = () => {
-    const filters = {
-      ...searchFilters,
-      search: searchTerm,
-      tags: selectedTags,
-      sortBy,
-      sortOrder,
-      page: 1
-    };
-    
-    // In real app: dispatch(fetchBlogs(filters));
-    console.log('Searching with filters:', filters);
+
+    dispatch(fetchBlogs({
+      page : 1,
+      limit : 6,
+      search : searchTerm,
+      tags : selectedTags
+    }))
   };
-  
+
   const formatDate = (date: Date | string) => {
     const parsedDate = new Date(date);
     if (isNaN(parsedDate.getTime())) {
@@ -156,11 +65,11 @@ const BlogPage = () => {
   };
 
 
-const toggleTag = (tag: string): void => {
-  setSelectedTags((prev: string[]) =>
-    prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
-  );
-};
+  const toggleTag = (tag: string): void => {
+    setSelectedTags((prev: string[]) =>
+      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
+    );
+  };
 
   const handleViewBlog = (blogId: Blog['id']) => {
     console.log('Viewing blog:', blogId);
@@ -182,9 +91,110 @@ const toggleTag = (tag: string): void => {
     );
   }
 
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    dispatch(fetchBlogs({ page: page, limit: 6 }));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const Pagination = () => {
+
+    if (pagination.totalPages <= 1) return null;
+
+    const getPageNumbers = () => {
+      const pages = [];
+      const maxVisiblePages = 3;
+
+      if (pagination.totalPages <= maxVisiblePages) {
+        for (let i = 1; i <= pagination.totalPages; i++) {
+          pages.push(i);
+        }
+      } else {
+        const startPage = Math.max(1, pagination.currentPage - 2);
+        const endPage = Math.min(pagination.totalPages, pagination.currentPage + 2);
+
+        if (startPage > 1) {
+          pages.push(1);
+          if (startPage > 2) pages.push('...');
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+          pages.push(i);
+        }
+
+        if (endPage < pagination.totalPages) {
+          if (endPage < pagination.totalPages - 1) pages.push('...');
+          pages.push(pagination.totalPages);
+        }
+      }
+
+      return pages;
+    };
+
+    return (
+      <div className="flex items-center justify-between mt-8">
+        <div className={`text-sm ${isDarkMode ? 'text-slate-400' : 'text-gray-600'}`}>
+          Showing {((pagination.currentPage - 1) * pagination.limit) + 1} to {Math.min(pagination.currentPage * pagination.limit, pagination.totalItems)} of {pagination.totalItems} blogs
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => handlePageChange(pagination.currentPage - 1)}
+            disabled={!pagination.hasPrev}
+            className={`p-2 rounded-lg border transition-colors ${pagination.hasPrev
+              ? isDarkMode
+                ? 'bg-slate-700 border-slate-600 text-slate-200 hover:bg-slate-600'
+                : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+              : isDarkMode
+                ? 'bg-slate-800 border-slate-700 text-slate-600 cursor-not-allowed'
+                : 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'
+              }`}
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+
+          {getPageNumbers().map((page, index) => (
+            <button
+              key={index}
+              onClick={() => typeof page === 'number' && handlePageChange(page)}
+              disabled={page === '...'}
+              className={`px-3 py-2 rounded-lg border transition-colors ${page === pagination.currentPage
+                ? 'bg-blue-500 border-blue-500 text-white'
+                : typeof page === 'number'
+                  ? isDarkMode
+                    ? 'bg-slate-700 border-slate-600 text-slate-200 hover:bg-slate-600'
+                    : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                  : isDarkMode
+                    ? 'bg-slate-800 border-slate-700 text-slate-600 cursor-default'
+                    : 'bg-gray-100 border-gray-200 text-gray-400 cursor-default'
+                }`}
+            >
+              {page}
+            </button>
+          ))}
+
+          <button
+            onClick={() => handlePageChange(pagination.currentPage + 1)}
+            disabled={!pagination.hasNext}
+            className={`p-2 rounded-lg border transition-colors ${pagination.hasNext
+              ? isDarkMode
+                ? 'bg-slate-700 border-slate-600 text-slate-200 hover:bg-slate-600'
+                : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+              : isDarkMode
+                ? 'bg-slate-800 border-slate-700 text-slate-600 cursor-not-allowed'
+                : 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'
+              }`}
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="min-[500px] bg-gray-50 pt-[65px] dark:bg-slate-900">
-     
+
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Search and Filters */}
@@ -207,7 +217,7 @@ const toggleTag = (tag: string): void => {
 
             {/* Sort Controls */}
             <div className="flex gap-2">
-             
+
 
               <button
                 onClick={() => setShowFilters(!showFilters)}
@@ -235,11 +245,10 @@ const toggleTag = (tag: string): void => {
                   <button
                     key={tag}
                     onClick={() => toggleTag(tag)}
-                    className={`px-3 py-1 rounded-full text-sm transition-colors ${
-                      selectedTags.includes(tag)
-                        ? 'bg-blue-100 text-blue-800 border border-blue-300'
-                        : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
-                    }`}
+                    className={`px-3 py-1 rounded-full text-sm transition-colors ${selectedTags.includes(tag)
+                      ? 'bg-blue-100 text-blue-800 border border-blue-300'
+                      : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
+                      }`}
                   >
                     {tag}
                   </button>
@@ -252,96 +261,68 @@ const toggleTag = (tag: string): void => {
         {/* Blog Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {blogs.map((blog) => (
-                <div key={blog.id} className={`group bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:shadow-lg hover:border-blue-200 dark:hover:border-blue-700 transition-all duration-300`}>
+            <div key={blog.id} className={`group bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:shadow-lg hover:border-blue-200 dark:hover:border-blue-700 transition-all duration-300`}>
 
-                  {/* Main Content */}
-                  <div className={`p-6`}>
-                    {/* Header Row */}
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex items-center space-x-3">
-                        {/* Status Badge */}
-                        <span className="inline-flex items-center px-2.5 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded-lg text-xs font-medium">
-                          <div className="w-2 h-2 bg-emerald-500 rounded-full mr-2"></div>
-                          Published
-                        </span>
-                        <span className="text-sm text-slate-500 dark:text-slate-400">
-                          {formatDate(blog.createdAt)}
-                        </span>
-                      </div>
-                     
-                    </div>
-
-                    {/* Title */}
-                    <h3
-                      className="text-xl font-bold text-slate-900 dark:text-white mb-3 line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors cursor-pointer leading-snug"
-                      onClick={() => handleViewBlog(blog.id)}
-                    >
-                      {blog.title}
-                    </h3>
-
-                    {/* Excerpt */}
-                    <p className="text-slate-600 dark:text-slate-400 line-clamp-3 mb-6 leading-relaxed text-sm">
-                      {blog.excerpt}
-                    </p>
-
-                    {/* Tags */}
-                    {blog.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
-                        {blog.tags.slice(0, 3).map((tag, index) => (
-                          <span
-                            key={index}
-                            className="inline-flex items-center px-3 py-1.5 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-medium hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors cursor-pointer"
-                          >
-                            <Tag className="w-3 h-3 mr-1.5" />
-                            {tag}
-                          </span>
-                        ))}
-                        {blog.tags.length > 3 && (
-                          <span className="inline-flex items-center px-3 py-1.5 bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 rounded-lg text-xs font-medium">
-                            +{blog.tags.length - 3} more
-                          </span>
-                        )}
-                      </div>
-                    )}
+              {/* Main Content */}
+              <div className={`p-6`}>
+                {/* Header Row */}
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center space-x-3">
+                    {/* Status Badge */}
+                    <span className="inline-flex items-center px-2.5 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded-lg text-xs font-medium">
+                      <div className="w-2 h-2 bg-emerald-500 rounded-full mr-2"></div>
+                      Published
+                    </span>
+                    <span className="text-sm text-slate-500 dark:text-slate-400">
+                      {formatDate(blog.createdAt)}
+                    </span>
                   </div>
 
-                 
                 </div>
-              ))}
+
+                {/* Title */}
+                <h3
+                  className="text-xl font-bold text-slate-900 dark:text-white mb-3 line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors cursor-pointer leading-snug"
+                  onClick={() => handleViewBlog(blog.id)}
+                >
+                  {blog.title}
+                </h3>
+
+                {/* Excerpt */}
+                <p className="text-slate-600 dark:text-slate-400 line-clamp-3 mb-6 leading-relaxed text-sm">
+                  {blog.excerpt}
+                </p>
+
+                {/* Tags */}
+                {blog.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {blog.tags.slice(0, 3).map((tag, index) => (
+                      <span
+                        key={index}
+                        className="inline-flex items-center px-3 py-1.5 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-medium hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors cursor-pointer"
+                      >
+                        <Tag className="w-3 h-3 mr-1.5" />
+                        {tag}
+                      </span>
+                    ))}
+                    {blog.tags.length > 3 && (
+                      <span className="inline-flex items-center px-3 py-1.5 bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 rounded-lg text-xs font-medium">
+                        +{blog.tags.length - 3} more
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+
+
+            </div>
+          ))}
         </div>
 
         {/* Pagination */}
         {pagination.totalPages > 1 && (
-          <div className="mt-8 flex items-center justify-center space-x-2">
-            <button
-              disabled={!pagination.hasPrev}
-              className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-            >
-              Previous
-            </button>
-            
-            <div className="flex space-x-1">
-              {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map(page => (
-                <button
-                  key={page}
-                  className={`px-3 py-2 rounded-lg ${
-                    page === pagination.currentPage
-                      ? 'bg-blue-600 text-white'
-                      : 'border border-gray-300 hover:bg-gray-50'
-                  }`}
-                >
-                  {page}
-                </button>
-              ))}
-            </div>
-            
-            <button
-              disabled={!pagination.hasNext}
-              className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-            >
-              Next
-            </button>
-          </div>
+          <Pagination />
+
         )}
 
         {/* Empty State */}
