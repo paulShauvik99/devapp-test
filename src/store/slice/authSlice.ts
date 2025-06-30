@@ -5,6 +5,7 @@ import type {
   AuthResponse,
 } from '../../models/Auth';
 import type { User } from '../../models';
+import axios from 'axios';
 
 interface AuthState {
   user: User | null;
@@ -29,18 +30,14 @@ export const loginUser = createAsyncThunk<AuthResponse, LoginInput>(
   'auth/login',
   async (credentials, { rejectWithValue }) => {
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(credentials),
-      });
+      const response = await axios.post('/api/auth/login',  JSON.stringify(credentials));
       
-      if (!response.ok) {
-        const error = await response.json();
-        return rejectWithValue(error.message || 'Login failed');
+      if(response.statusText !== 'OK') {
+        const error = response.data.message || 'Login failed';
+        return rejectWithValue(error);
       }
       
-      return await response.json();
+      return await response.data.data;
     } catch (error) {
       return rejectWithValue('Network error occurred');
     }

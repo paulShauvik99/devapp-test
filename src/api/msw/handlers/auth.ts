@@ -7,11 +7,10 @@ import type { LoginInput, User } from '../../../models';
 
 export const authHandlers = [
     http.post('/api/auth/login', async ({ request }) => {
-        const body : LoginInput = await request.json() as { email: string; password: string };
+        const { email , password } = await request.json() as LoginInput;
+        const user = mockUsers.find(u => u.email === email);
 
-        const user = mockUsers.find(u => u.email === body.email);
-
-        if (user && body.password === user.password) {
+        if (user && password === user.password) {
             const token = generateJWT({ id: user.id, email: user.email });
             const refreshToken = generateJWT({ id: user.id }, 7 * 24 * 60 * 60); 
 

@@ -3,15 +3,16 @@ import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/tool
 import type { 
   UserProfile, 
   UpdateUserInput, 
-  DeveloperSearchFilters 
+  DeveloperSearchFilters, 
+  User
 } from '../../models';
 import type { Skill, UserSkill } from '../../models';
-import type { SocialLink, CreateSocialLinkInput } from '../../models';
+import type { SocialLink } from '../../models';
 import type { PaginatedResponse } from '../../models';
 
 interface DeveloperState {
-  developers: UserProfile[];
-  currentDeveloper: UserProfile | null;
+  developers: User[];
+  currentDeveloper: User | null;
   skills: Skill[];
   userSkills: UserSkill[];
   socialLinks: SocialLink[];
@@ -61,7 +62,7 @@ export const fetchDevelopers = createAsyncThunk<
   async (filters = {}, { rejectWithValue }) => {
     try {
       const response = await axios.get('/api/users', { params: filters });
-      return response.data;
+      return response.data.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch developers');
     }
@@ -170,8 +171,9 @@ const developerSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchDevelopers.fulfilled, (state, action) => {
+        console.log(action.payload);
         state.isLoading = false;
-        state.developers = action.payload.data;
+        state.developers = action.payload;
         state.pagination = action.payload.pagination;
       })
       .addCase(fetchDevelopers.rejected, (state, action) => {

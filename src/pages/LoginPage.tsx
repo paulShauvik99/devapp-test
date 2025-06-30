@@ -1,82 +1,80 @@
-import React, { useState } from 'react';
+import { use, useEffect, useState } from 'react';
+import { set, useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+import * as yup from 'yup';
 import { 
   Eye, EyeOff, Mail, Lock, Code, ArrowRight, AlertCircle,
   Globe, Shield, Zap, Moon, Sun
 } from 'lucide-react';
-import { useAppSelector, useAppDispatch } from '../store/hooks';
-import { toggleTheme } from '../store/slice/themeSlice';
+import type { LoginInput as FormData } from '../models';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { useNavigate } from 'react-router-dom';
+import { loginUser } from '../store/slice/authSlice';
 
-interface FormData {
-  email: string;
-  password: string;
-  rememberMe: boolean;
-}
 
-interface FormErrors {
-  email?: string;
-  password?: string;
-}
+// Extended form data interface for UI state
+
+// Validation schema
+const validationSchema = yup.object({
+  email: yup
+    .string()
+    .email('Please enter a valid email address')
+    .required('Email is required'),
+  password: yup
+    .string()
+    .min(6, 'Password must be at least 6 characters')
+    .required('Password is required')
+});
 
 const LoginPage = () => {
+  
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { isDarkMode } = useAppSelector((state) => state.theme);
   
+  const [isDarkMode, setIsDarkMode] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [formData, setFormData] = useState<FormData>({
-    email: '',
-    password: '',
-    rememberMe: false
-  });
-  const [errors, setErrors] = useState<FormErrors>({});
   const [isLoading, setIsLoading] = useState(false);
+  
+  const loginRes = useAppSelector((state) => state.auth);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
-    
-    // Clear error when user starts typing
-    if (errors[name as keyof FormErrors]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
+
+  // React Hook Form setup
+  const { register, handleSubmit, formState: { errors, isValid, isDirty },  watch, reset } = useForm<FormData>({
+    resolver: yupResolver(validationSchema),
+    mode: 'onChange',
+    defaultValues: {
+      email: '',
+      password: ''
     }
-  };
+  });
 
-  const validateForm = (): boolean => {
-    const newErrors: FormErrors = {};
-    
-    if (!formData.email) newErrors.email = 'Email is required';
-    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Email is invalid';
-    
-    if (!formData.password) newErrors.password = 'Password is required';
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+  useEffect(() => {
+      if(loginRes.isAuthenticated){
+        localStorage.setItem('token', loginRes.token || '');
+        localStorage.setItem('isAuthenticated', loginRes.isAuthenticated ? 'true' : 'false');
+        navigate('/');
+      }
+  },[loginRes])
 
-  const handleSubmit = async () => {
-    if (!validateForm()) return;
-    
+
+  // // Watch form values for dynamic UI updates
+  const watchedEmail = watch('email');
+  const watchedPassword = watch('password');
+
+  const onSubmit = async (data: FormData) => {
     setIsLoading(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      console.log('Login submitted:', formData);
-      // Handle success/error
-    }, 2000);
+    dispatch(loginUser( data ));
+    setIsLoading(false);
   };
 
   const handleThemeToggle = () => {
-    dispatch(toggleTheme());
+    setIsDarkMode(!isDarkMode);
   };
 
   const navigateRegister = () => {
-    navigate("/register")
-  }
+    console.log('Navigate to register');
+    // navigate("/register") - would work with router
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 flex items-center justify-center p-4 relative">
@@ -175,9 +173,7 @@ const LoginPage = () => {
                   <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
                   <input
                     type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
+                    {...register('email')}
                     className={`w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-700 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 ${
                       errors.email ? 'border-red-300 dark:border-red-600' : 'border-slate-200 dark:border-slate-600'
                     }`}
@@ -187,7 +183,7 @@ const LoginPage = () => {
                 {errors.email && (
                   <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center">
                     <AlertCircle className="w-4 h-4 mr-1" />
-                    {errors.email}
+                    {errors.email.message}
                   </p>
                 )}
               </div>
@@ -201,9 +197,7 @@ const LoginPage = () => {
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
                   <input
                     type={showPassword ? 'text' : 'password'}
-                    name="password"
-                    value={formData.password}
-                    onChange={handleInputChange}
+                    {...register('password')}
                     className={`w-full pl-10 pr-12 py-3 bg-slate-50 dark:bg-slate-700 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 ${
                       errors.password ? 'border-red-300 dark:border-red-600' : 'border-slate-200 dark:border-slate-600'
                     }`}
@@ -220,7 +214,7 @@ const LoginPage = () => {
                 {errors.password && (
                   <p className="mt-1 text-sm text-red-600 dark:text-red-400 flex items-center">
                     <AlertCircle className="w-4 h-4 mr-1" />
-                    {errors.password}
+                    {errors.password.message}
                   </p>
                 )}
               </div>
@@ -230,9 +224,7 @@ const LoginPage = () => {
                 <label className="flex items-center">
                   <input
                     type="checkbox"
-                    name="rememberMe"
-                    checked={formData.rememberMe}
-                    onChange={handleInputChange}
+                    {...register('rememberMe')}
                     className="w-4 h-4 text-blue-600 bg-slate-50 dark:bg-slate-700 border-slate-300 dark:border-slate-600 rounded focus:ring-blue-500 focus:ring-2"
                   />
                   <span className="ml-2 text-sm text-slate-600 dark:text-slate-400">Remember me</span>
@@ -247,8 +239,9 @@ const LoginPage = () => {
 
               {/* Submit Button */}
               <button
-                onClick={handleSubmit}
-                disabled={isLoading}
+                type="button"
+                onClick={handleSubmit(onSubmit)}
+                disabled={isLoading || !isValid}
                 className="w-full bg-gradient-to-r from-blue-600 to-violet-600 text-white py-3 px-4 rounded-xl font-semibold hover:from-blue-700 hover:to-violet-700 transition-all transform hover:scale-[1.02] shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center space-x-2"
               >
                 {isLoading ? (

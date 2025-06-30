@@ -6,7 +6,7 @@ export interface User {
     id: string;
     email: string;
     name: string;
-    password: string; // Note: In a real application, passwords should not be stored in plain text
+    password: string;
     bio?: string;
     avatar?: string;
     github?: string;
