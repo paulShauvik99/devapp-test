@@ -38,7 +38,7 @@ function App() {
       <CssBaseline />
       <div className="min-h-screen flex flex-col">
         {/* Conditionally render Navbar */}
-        {!isAuthPage && <Navbar />}
+        <Navbar />
 
         <main className="flex-1">
           <Routes>
@@ -57,11 +57,25 @@ function App() {
               }
             />
             {/* Protected Route to be added */}
-            <Route path="/developers" element={<DeveloperListPage />} />
-            <Route path="/developers/:id" element={<DeveloperProfilePage />} />
-            <Route path="/blogs" element={<BlogListPage />} />
-            <Route path="/blogs/developers/:id" element={<UserBlogsPage />} />
-
+            <Route path="/developers" element={
+              <ProtectedRoute>
+                <DeveloperListPage />
+              </ProtectedRoute>} />
+            <Route path="/developers/:id" element={
+              <ProtectedRoute>
+                <DeveloperProfilePage />
+              </ProtectedRoute>
+              } />
+            <Route path="/blogs" element={
+              <ProtectedRoute>
+                <BlogListPage />
+              </ProtectedRoute>
+              } />
+            <Route path="/blogs/developers/:id" element={
+              <ProtectedRoute>
+                <UserBlogsPage />
+              </ProtectedRoute>
+              } />
             {/* 404 Route */}
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
