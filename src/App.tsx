@@ -12,7 +12,6 @@ import { lightTheme, darkTheme } from './styles/theme'
 // Pages
 import HomePage from './pages/HomePage'
 import DeveloperListPage from './pages/DeveloperListPage'
-import DeveloperProfilePage from './pages/DeveloperProfilePage'
 import BlogListPage from './pages/BlogListPage'
 import UserBlogsPage from './pages/UserBlogsPage'
 import LoginPage from './pages/LoginPage'
@@ -61,11 +60,6 @@ function App() {
               <ProtectedRoute>
                 <DeveloperListPage />
               </ProtectedRoute>} />
-            <Route path="/developers/:id" element={
-              <ProtectedRoute>
-                <DeveloperProfilePage />
-              </ProtectedRoute>
-              } />
             <Route path="/blogs" element={
               <ProtectedRoute>
                 <BlogListPage />

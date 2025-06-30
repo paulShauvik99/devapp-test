@@ -59,7 +59,7 @@ const HomePage = () => {
     }
     // Navigate to CreateBlog page
     setIsModalOpen(true);
-    console.log("Navigating to CreateBlog page");
+    
   };
 
     const handleSaveBlog = async (blogData: CreateBlogInput | UpdateBlogInput) => {
@@ -73,9 +73,8 @@ const HomePage = () => {
       setShowLoginPopup(true);
       return;
     }
-
+    navigate('/developers');
     // Navigate to FindDevelopers page
-    console.log("Navigating to FindDevelopers page");
   };
 
   const handleReadBlog = (blogId : string) => {
@@ -84,7 +83,7 @@ const HomePage = () => {
       return;
     }
     // Navigate to ReadBlog page
-    console.log(`Navigating to ReadBlog page for blog ${blogId}`);
+    navigate(`/blogs/${blogId}/view`);
   };
 
   const handleAllBlogs = () => {

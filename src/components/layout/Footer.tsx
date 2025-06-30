@@ -8,79 +8,24 @@ import {
   Instagram,
   Linkedin,
   Github,
-  Activity,
-  Shield,
-  Zap,
-  Send,
-  ArrowRight
+ 
 } from 'lucide-react';
 
 const Footer = () => {
-  const [email, setEmail] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleNewsletterSubmit = async () => {
-    if (!email) return;
-    
-    setIsSubmitting(true);
-    // Simulate API call
-    setTimeout(() => {
-      console.log('Newsletter subscription:', email);
-      setEmail('');
-      setIsSubmitting(false);
-    }, 1000);
-  };
 
-  const footerLinks = {
-    Platform: [
-      { name: 'Features', href: '#features' },
-      { name: 'Integrations', href: '#integrations' },
-      { name: 'API Documentation', href: '#api-docs' },
-      { name: 'Pricing', href: '#pricing' },
-      { name: 'Enterprise', href: '#enterprise' }
-    ],
-    Resources: [
-      { name: 'Blog', href: '#blog' },
-      { name: 'Case Studies', href: '#case-studies' },
-      { name: 'Webinars', href: '#webinars' },
-      { name: 'Help Center', href: '#help' },
-      { name: 'Community', href: '#community' }
-    ],
-    Support: [
-      { name: 'Contact Us', href: '#contact' },
-      { name: 'System Status', href: '#status' },
-      { name: 'Bug Reports', href: '#bugs' },
-      { name: 'Feature Requests', href: '#features' },
-      { name: 'Feedback', href: '#feedback' }
-    ],
-    Legal: [
-      { name: 'Privacy Policy', href: '#privacy' },
-      { name: 'Terms of Service', href: '#terms' },
-      { name: 'Cookie Policy', href: '#cookies' },
-      { name: 'GDPR', href: '#gdpr' },
-      { name: 'Security', href: '#security' }
-    ]
-  };
 
   const socialLinks = [
-    { icon: Facebook, href: '#facebook', name: 'Facebook', color: 'hover:text-blue-600' },
-    { icon: Twitter, href: '#twitter', name: 'Twitter', color: 'hover:text-blue-400' },
-    { icon: Instagram, href: '#instagram', name: 'Instagram', color: 'hover:text-pink-500' },
-    { icon: Linkedin, href: '#linkedin', name: 'LinkedIn', color: 'hover:text-blue-700' },
-    { icon: Github, href: '#github', name: 'GitHub', color: 'hover:text-gray-900 dark:hover:text-white' }
-  ];
-
-  const systemStatus = [
-    { name: 'API Status', status: 'operational', icon: Activity, color: 'text-green-500' },
-    { name: 'Database', status: 'operational', icon: Shield, color: 'text-green-500' },
-    { name: 'CDN', status: 'operational', icon: Zap, color: 'text-green-500' }
+    { icon: Twitter, href: 'https://x.com/ShauvikP', name: 'Twitter', color: 'hover:text-blue-400' },
+    { icon: Linkedin, href: 'https://www.linkedin.com/in/shauvik-paul20', name: 'LinkedIn', color: 'hover:text-blue-700' },
+    { icon: Github, href: 'https://github.com/paulShauvik99', name: 'GitHub', color: 'hover:text-gray-900 dark:hover:text-white' }
   ];
 
   const companyInfo = {
-    name: 'AppName Inc.',
-    email: 'contact@appname.com',
-    phone: '+1 (555) 123-4567',
-    address: 'San Francisco, CA',
+    name: 'DevHub.',
+    email: 'paul99shauvik108@gmail.com',
+    phone: '+91 70024 50760',
+    address: 'Kolkata, India',
     year: new Date().getFullYear()
   };
 
@@ -94,7 +39,7 @@ const Footer = () => {
           <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-6">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center shadow-lg">
-                <span className="text-white font-bold text-lg">A</span>
+                <span className="text-white font-bold text-lg">D</span>
               </div>
               <div>
                 <p className="text-lg font-semibold text-gray-900 dark:text-white">{companyInfo.name}</p>

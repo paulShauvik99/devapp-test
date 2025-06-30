@@ -188,8 +188,6 @@ const CreateBlogModal: React.FC<CreateBlogModalProps> = ({ isOpen, onClose, onSa
       onSave(newBlogdata);
     }
 
-
-
     setIsSaving(false);
     console.log(formData)
     //onClose();
@@ -204,43 +202,43 @@ const CreateBlogModal: React.FC<CreateBlogModalProps> = ({ isOpen, onClose, onSa
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={onClose}>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50" onClick={onClose}>
       <div
-        className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden"
+        className="bg-white dark:bg-slate-800 rounded-lg sm:rounded-xl shadow-2xl w-full h-full sm:h-auto sm:max-w-6xl sm:max-h-[95vh] lg:max-h-[95vh] overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
         onKeyDown={handleKeyDown}
         tabIndex={-1}
       >
         {/* Modal Header */}
-        <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-700">
-          <div className="flex items-center space-x-4">
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
+        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-slate-200 dark:border-slate-700 shrink-0">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4">
+            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
               {editBlogMode ? 'Edit Blog' : 'Create New Blog'}
             </h2>
-            <div className="text-sm text-slate-500 dark:text-slate-400">
+            <div className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 sm:mt-0">
               {wordCount} words • {Math.ceil(wordCount / 200)} min read
             </div>
           </div>
 
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2 sm:space-x-3">
             <button
               onClick={() => setIsPreviewMode(!isPreviewMode)}
-              className={`flex items-center space-x-2 px-3 py-2 rounded-lg border transition-colors ${isPreviewMode
+              className={`flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-2 rounded-lg border text-xs sm:text-sm transition-colors ${isPreviewMode
                 ? 'bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-900/30 dark:border-blue-700 dark:text-blue-300'
                 : 'border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
                 }`}
             >
               {isPreviewMode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              <span>{isPreviewMode ? 'Edit' : 'Preview'}</span>
+              <span className="hidden sm:inline">{isPreviewMode ? 'Edit' : 'Preview'}</span>
             </button>
 
             <button
               onClick={handleSave}
               disabled={isSaving || !formData.title.trim()}
-              className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+              className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors text-xs sm:text-sm"
             >
               <Save className="w-4 h-4" />
-              <span>{isSaving ? 'Saving...' : (editBlogMode ? 'Update Blog' : 'Save Blog')}</span>
+              <span className="hidden sm:inline">{isSaving ? 'Saving...' : (editBlogMode ? 'Update Blog' : 'Save Blog')}</span>
             </button>
 
             <button
@@ -253,27 +251,27 @@ const CreateBlogModal: React.FC<CreateBlogModalProps> = ({ isOpen, onClose, onSa
         </div>
 
         {/* Modal Content */}
-        <div className="flex h-[calc(90vh-88px)]">
+        <div className="flex flex-col lg:flex-row flex-1 overflow-hidden lg:h-[calc(95vh-88px)]">
           {/* Main Content Area */}
-          <div className="flex-1 flex flex-col overflow-hidden">
+          <div className="flex-1 flex flex-col overflow-hidden min-h-0">
             {/* Title Input */}
-            <div className="p-6 border-b border-slate-200 dark:border-slate-700">
+            <div className="p-4 sm:p-6 border-b border-slate-200 dark:border-slate-700 shrink-0">
               <input
                 type="text"
                 placeholder="Enter your blog title..."
                 value={formData.title}
                 onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                className="w-full text-2xl font-bold bg-transparent border-none outline-none text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500"
+                className="w-full text-lg sm:text-2xl font-bold bg-transparent border-none outline-none text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500"
                 autoFocus
               />
             </div>
 
             {/* Content Editor/Preview */}
-            <div className="flex-1 flex flex-col overflow-hidden">
+            <div className="flex-1 flex flex-col overflow-hidden min-h-0">
               {/* Toolbar */}
               {!isPreviewMode && (
-                <div className="border-b border-slate-200 dark:border-slate-700 p-4">
-                  <div className="flex flex-wrap gap-2">
+                <div className="border-b border-slate-200 dark:border-slate-700 p-3 sm:p-4 shrink-0">
+                  <div className="flex flex-wrap gap-1 sm:gap-2">
                     {toolbarButtons.map((button, index) => (
                       <button
                         key={index}
@@ -289,23 +287,23 @@ const CreateBlogModal: React.FC<CreateBlogModalProps> = ({ isOpen, onClose, onSa
               )}
 
               {/* Content Area */}
-              <div className="flex-1 overflow-auto">
+              <div className="flex-1 overflow-auto min-h-0">
                 {isPreviewMode ? (
-                  <div className="p-6">
-                    <div className="prose prose-slate dark:prose-invert max-w-none">
+                  <div className="p-4 sm:p-6 h-full">
+                    <div className="prose prose-slate dark:prose-invert max-w-none prose-sm sm:prose-base">
                       <ReactMarkdown
                         components={{
-                          h1: ({ children }) => <h1 className="text-3xl font-bold text-slate-900 dark:text-white mt-8 mb-4 first:mt-0">{children}</h1>,
-                          h2: ({ children }) => <h2 className="text-2xl font-semibold text-slate-900 dark:text-white mt-6 mb-3">{children}</h2>,
-                          h3: ({ children }) => <h3 className="text-xl font-semibold text-slate-900 dark:text-white mt-6 mb-3">{children}</h3>,
-                          p: ({ children }) => <p className="text-slate-700 dark:text-slate-300 mb-4 leading-relaxed">{children}</p>,
+                          h1: ({ children }) => <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mt-6 sm:mt-8 mb-3 sm:mb-4 first:mt-0">{children}</h1>,
+                          h2: ({ children }) => <h2 className="text-xl sm:text-2xl font-semibold text-slate-900 dark:text-white mt-5 sm:mt-6 mb-2 sm:mb-3">{children}</h2>,
+                          h3: ({ children }) => <h3 className="text-lg sm:text-xl font-semibold text-slate-900 dark:text-white mt-5 sm:mt-6 mb-2 sm:mb-3">{children}</h3>,
+                          p: ({ children }) => <p className="text-slate-700 dark:text-slate-300 mb-3 sm:mb-4 leading-relaxed text-sm sm:text-base">{children}</p>,
                           strong: ({ children }) => <strong className="font-semibold text-slate-900 dark:text-white">{children}</strong>,
                           em: ({ children }) => <em className="italic">{children}</em>,
-                          code: ({ children }) => <code className="bg-slate-100 dark:bg-slate-700 px-1 py-0.5 rounded text-sm font-mono text-slate-800 dark:text-slate-200">{children}</code>,
-                          pre: ({ children }) => <pre className="bg-slate-100 dark:bg-slate-700 p-4 rounded-lg overflow-x-auto mb-4">{children}</pre>,
-                          blockquote: ({ children }) => <blockquote className="border-l-4 border-slate-300 dark:border-slate-600 pl-4 italic text-slate-600 dark:text-slate-400 my-4">{children}</blockquote>,
-                          ul: ({ children }) => <ul className="list-disc list-inside mb-4 text-slate-700 dark:text-slate-300">{children}</ul>,
-                          ol: ({ children }) => <ol className="list-decimal list-inside mb-4 text-slate-700 dark:text-slate-300">{children}</ol>,
+                          code: ({ children }) => <code className="bg-slate-100 dark:bg-slate-700 px-1 py-0.5 rounded text-xs sm:text-sm font-mono text-slate-800 dark:text-slate-200">{children}</code>,
+                          pre: ({ children }) => <pre className="bg-slate-100 dark:bg-slate-700 p-3 sm:p-4 rounded-lg overflow-x-auto mb-3 sm:mb-4 text-xs sm:text-sm">{children}</pre>,
+                          blockquote: ({ children }) => <blockquote className="border-l-4 border-slate-300 dark:border-slate-600 pl-3 sm:pl-4 italic text-slate-600 dark:text-slate-400 my-3 sm:my-4 text-sm sm:text-base">{children}</blockquote>,
+                          ul: ({ children }) => <ul className="list-disc list-inside mb-3 sm:mb-4 text-slate-700 dark:text-slate-300 text-sm sm:text-base">{children}</ul>,
+                          ol: ({ children }) => <ol className="list-decimal list-inside mb-3 sm:mb-4 text-slate-700 dark:text-slate-300 text-sm sm:text-base">{children}</ol>,
                           li: ({ children }) => <li className="mb-1">{children}</li>,
                           a: ({ href, children }) => <a href={href} className="text-blue-600 dark:text-blue-400 hover:underline">{children}</a>
                         }}
@@ -313,26 +311,25 @@ const CreateBlogModal: React.FC<CreateBlogModalProps> = ({ isOpen, onClose, onSa
                         {formData.content || '*Start writing your blog content...*'}
                       </ReactMarkdown>
                     </div>
-
                   </div>
                 ) : (
-                  <div className="p-6 h-full">
+                  <div className="p-4 sm:p-6 h-full">
                     <textarea
                       id="content-editor"
                       placeholder="Start writing your blog content... You can use Markdown syntax for formatting.
 
-                        Examples:
-                        # Heading 1
-                        ## Heading 2
-                        **Bold text**
-                        *Italic text*
-                        - List item
-                        > Quote
-                        [Link text](URL)
-                        ![Image alt text](Image URL)"
+Examples:
+# Heading 1
+## Heading 2
+**Bold text**
+*Italic text*
+- List item
+> Quote
+[Link text](URL)
+![Image alt text](Image URL)"
                       value={formData.content}
                       onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
-                      className="w-full h-full bg-transparent border-none outline-none resize-none text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 leading-relaxed font-mono text-sm"
+                      className="w-full h-full bg-transparent border-none outline-none resize-none text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 leading-relaxed font-mono text-sm sm:text-base"
                     />
                   </div>
                 )}
@@ -341,11 +338,11 @@ const CreateBlogModal: React.FC<CreateBlogModalProps> = ({ isOpen, onClose, onSa
           </div>
 
           {/* Sidebar */}
-          <div className="w-80 border-l border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 overflow-auto">
-            <div className="p-6 space-y-6">
+          <div className="w-full lg:w-80 border-t lg:border-t-0 lg:border-l border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 overflow-auto">
+            <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
               {/* Excerpt */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 sm:mb-3">
                   Excerpt
                 </label>
                 <textarea
@@ -360,11 +357,9 @@ const CreateBlogModal: React.FC<CreateBlogModalProps> = ({ isOpen, onClose, onSa
                 </div>
               </div>
 
-
-
               {/* Tags */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 sm:mb-3">
                   Tags
                 </label>
 
@@ -380,7 +375,7 @@ const CreateBlogModal: React.FC<CreateBlogModalProps> = ({ isOpen, onClose, onSa
                     />
                     <button
                       onClick={handleAddTag}
-                      className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                      className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shrink-0"
                     >
                       <Plus className="w-4 h-4" />
                     </button>
@@ -408,22 +403,7 @@ const CreateBlogModal: React.FC<CreateBlogModalProps> = ({ isOpen, onClose, onSa
                 </div>
               </div>
 
-              {/* Blog Stats (for edit mode)
-              {editBlogMode && formData.createdAt && (
-                <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
-                  <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
-                    Blog Stats
-                  </h4>
-                  <div className="space-y-2 text-sm text-slate-500 dark:text-slate-400">
-                    <div>Likes: {formData.likes}</div>
-                    <div>Comments: {formData.commentCount}</div>
-                    <div>Created: {formData.createdAt.toLocaleDateString()}</div>
-                    {formData.publishedAt && (
-                      <div>Published: {formData.publishedAt.toLocaleDateString()}</div>
-                    )}
-                  </div>
-                </div>
-              )} */}
+      
             </div>
           </div>
         </div>
