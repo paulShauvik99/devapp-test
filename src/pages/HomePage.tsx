@@ -33,7 +33,6 @@ const HomePage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 // const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showLoginPopup, setShowLoginPopup] = useState(false);
-  const [editBlog, setEditBlog] = useState<Blog | {}>({});
   
 
 
@@ -70,6 +69,11 @@ const HomePage = () => {
   
 
   const handleFindDevelopers = () => {
+    if (!isAuthenticated) {
+      setShowLoginPopup(true);
+      return;
+    }
+
     // Navigate to FindDevelopers page
     console.log("Navigating to FindDevelopers page");
   };
@@ -469,6 +473,12 @@ const HomePage = () => {
                   Find Developers
                   <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                 </button>
+                 {!isAuthenticated && (
+                  <div className="mt-3 flex items-center text-sm text-slate-500 dark:text-slate-400">
+                    <Lock className="w-4 h-4 mr-1" />
+                    Login required to check Developers
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -600,7 +610,7 @@ const HomePage = () => {
                 <button 
                   onClick={() => {
                     closeLoginPopup();
-                    console.log("Navigating to login page");
+                    navigate('/login');
                   }}
                   className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                 >

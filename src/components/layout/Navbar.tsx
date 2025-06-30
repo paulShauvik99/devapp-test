@@ -70,6 +70,7 @@ const Navbar: React.FC = () => {
 
   // Navigation links for authenticated users
   const authenticatedNavLinks = [
+    { name: 'Home', href: '/', icon: Home },
     { name: 'Developers', href: '/developers', icon: Users },
     { name: 'Blogs', href: '/blogs', icon: BookOpen },
     { name: 'View Blogs', href: '/blogs/b1/view', icon: BookOpen },
@@ -79,7 +80,7 @@ const Navbar: React.FC = () => {
   // Navigation links for guests
   const guestNavLinks = [
     { name: 'Home', href: '/', icon: Home },
-    { name: 'Developers', href: '/developers', icon: Users },
+    // { name: 'Developers', href: '/developers', icon: Users },
     { name: 'About', href: '/about', icon: MessageSquare }
   ];
 

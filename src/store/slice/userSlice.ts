@@ -9,6 +9,7 @@ import type {
 import type { Skill, UserSkill } from '../../models';
 import type { SocialLink } from '../../models';
 import type { PaginatedResponse } from '../../models';
+import qs from 'qs';
 
 interface DeveloperState {
   developers: User[];
@@ -61,8 +62,11 @@ export const fetchDevelopers = createAsyncThunk<
   'developers/fetchDevelopers',
   async (filters = {}, { rejectWithValue }) => {
     try {
-      const response = await axios.get('/api/users', { params: filters });
-      return response.data.data;
+      console.log(filters)
+      const response = await axios.get('/api/users', { params: filters,
+  paramsSerializer: params => qs.stringify(params, { arrayFormat: 'repeat' })});
+      console.log(response.data.data);
+      return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch developers');
     }
@@ -173,7 +177,7 @@ const developerSlice = createSlice({
       .addCase(fetchDevelopers.fulfilled, (state, action) => {
         console.log(action.payload);
         state.isLoading = false;
-        state.developers = action.payload;
+        state.developers = action.payload.data;
         state.pagination = action.payload.pagination;
       })
       .addCase(fetchDevelopers.rejected, (state, action) => {

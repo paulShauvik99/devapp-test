@@ -1,7 +1,7 @@
 import { http, HttpResponse } from 'msw';
 import { mockBlogs, mockUsers } from '../data/mockData';
 import { createPaginatedResponse, createResponse } from '../utils/helpers';
-import type { Blog, BlogCreateResponse, BlogDetailResponse, SearchResponse, User, UserListResponse } from '../../../models';
+import type { Blog, BlogCreateResponse, SearchResponse, User, UserListResponse } from '../../../models';
 
 
 export const userHandlers = [
@@ -9,11 +9,27 @@ export const userHandlers = [
         const url = new URL(request.url);
         const page = parseInt(url.searchParams.get('page') || '1');
         const limit = parseInt(url.searchParams.get('limit') || '10');
+        const query = url.searchParams.get('query')?.toLowerCase() || '';
+        const skill = url.searchParams.get('filter')?.toLowerCase() || '';
+        
+        console.log(query , skill , page , limit);
+        const filtered = mockUsers.filter(user => {
+            const nameMatch = user.name.toLowerCase().includes(query);
+            const skillMatch = skill
+            ? user.skills.some(s => s.name.toLowerCase().includes(skill))
+            : true;
+
+            return nameMatch && skillMatch;
+        });
+
+        const paginatedRes = filtered.slice((page - 1) * limit, page * limit);
+
 
         const response: UserListResponse = createPaginatedResponse(
-            mockUsers,
+            paginatedRes,
             page,
             limit,
+            filtered,
             'Users retrieved successfully'
         );
 
@@ -93,8 +109,10 @@ export const userHandlers = [
             return nameMatch && skillMatch;
         });
 
+        const paginatedRes = filtered.slice((page - 1) * limit, page * limit);
+
         const response: SearchResponse<typeof mockUsers[0]> = {
-            ...createPaginatedResponse(filtered, page, limit, 'Filtered users retrieved successfully'),
+            ...createPaginatedResponse(paginatedRes, page, limit, filtered, 'Filtered users retrieved successfully'),
             query,
             filters: { skill }
         };

@@ -41,7 +41,8 @@ export interface UserProfile extends User {
 }
 
 export interface DeveloperSearchFilters {
-    skills?: string[];
+    filter?: string[];
     page?: number;
     limit?: number;
+    query?: string;
 }

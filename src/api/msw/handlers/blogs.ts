@@ -9,7 +9,7 @@ export const blogHandlers = [
         const page = parseInt(url.searchParams.get('page') || '1');
         const limit = parseInt(url.searchParams.get('limit') || '10');
 
-        const response: BlogListResponse = createPaginatedResponse(mockBlogs, page, limit, 'Blogs retrieved successfully');
+        const response: BlogListResponse = createPaginatedResponse(mockBlogs, page, limit, mockBlogs, 'Blogs retrieved successfully');
         return HttpResponse.json(response, { status: 200 });
     }),
 

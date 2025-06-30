@@ -18,16 +18,18 @@ export const createPaginatedResponse = <T>(
     data: T[], 
     page = 1, 
     limit = 10,
+    filteredData: T[], 
     successMessage: string
 ) => ({
     success: true,
     successMessage,
     data,
+    filteredData,
     pagination: {
         currentPage: page,
-        totalPages: Math.ceil(data.length / limit),
-        totalItems: data.length,
-        hasNext: page * limit < data.length,
+        totalPages: Math.ceil(filteredData.length / limit),
+        totalItems: filteredData.length,
+        hasNext: page * limit < filteredData.length,
         hasPrev: page > 1,
         limit
     }

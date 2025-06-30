@@ -10,6 +10,7 @@ import type { LoginInput as FormData } from '../models';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { useNavigate } from 'react-router-dom';
 import { loginUser } from '../store/slice/authSlice';
+import { toggleTheme } from '../store/slice/themeSlice';
 
 
 // Extended form data interface for UI state
@@ -30,16 +31,14 @@ const LoginPage = () => {
   
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const { isDarkMode } = useAppSelector((state) => state.theme);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   
-  const loginRes = useAppSelector((state) => state.auth);
 
 
   // React Hook Form setup
-  const { register, handleSubmit, formState: { errors, isValid},  watch } = useForm<FormData>({
+  const { register, handleSubmit, formState: { errors, isValid},  clearErrors } = useForm<FormData>({
     resolver: yupResolver(validationSchema),
     mode: 'onChange',
     defaultValues: {
@@ -48,11 +47,14 @@ const LoginPage = () => {
     }
   });
 
+  const handleThemeToggle = () => {
+      dispatch(toggleTheme());
+  };
   
 
-  // // Watch form values for dynamic UI updates
-  const watchedEmail = watch('email');
-  const watchedPassword = watch('password');
+  // // // Watch form values for dynamic UI updates
+  // const watchedEmail = watch('email');
+  // const watchedPassword = watch('password');
 
   const onSubmit = async (data: FormData) => {
     setIsLoading(true);
@@ -71,9 +73,6 @@ const LoginPage = () => {
 
   };
 
-  const handleThemeToggle = () => {
-    setIsDarkMode(!isDarkMode);
-  };
 
   const navigateRegister = () => {
     navigate("/register")
@@ -180,6 +179,10 @@ const LoginPage = () => {
                     className={`w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-700 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 ${
                       errors.email ? 'border-red-300 dark:border-red-600' : 'border-slate-200 dark:border-slate-600'
                     }`}
+                    onChange={(e) => {
+                      register('email').onChange(e);
+                      clearErrors('email');
+                    }}
                     placeholder="john@company.com"
                   />
                 </div>
@@ -201,6 +204,10 @@ const LoginPage = () => {
                   <input
                     type={showPassword ? 'text' : 'password'}
                     {...register('password')}
+                    onChange ={(e) => {
+                      register('password').onChange(e);
+                      clearErrors('password');
+                    }}
                     className={`w-full pl-10 pr-12 py-3 bg-slate-50 dark:bg-slate-700 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 ${
                       errors.password ? 'border-red-300 dark:border-red-600' : 'border-slate-200 dark:border-slate-600'
                     }`}
