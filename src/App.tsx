@@ -15,11 +15,10 @@ import DeveloperListPage from './pages/DeveloperListPage'
 import DeveloperProfilePage from './pages/DeveloperProfilePage'
 import BlogListPage from './pages/BlogListPage'
 import UserBlogsPage from './pages/UserBlogsPage'
-import CreateBlogPage from './pages/CreateBlogPage'
-import EditBlogPage from './pages/EditBlogPage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import NotFoundPage from './pages/NotFoundPage'
+import ViewBlogPage from './pages/ViewBlogPage'
 
 function App() {
   const dispatch = useDispatch()
@@ -49,10 +48,10 @@ function App() {
 
             
             <Route
-              path="/blogs/:id/edit"
+              path="/blogs/:id/view"
               element={
                 <ProtectedRoute>
-                  <EditBlogPage />
+                  <ViewBlogPage />
                 </ProtectedRoute>
               }
             />

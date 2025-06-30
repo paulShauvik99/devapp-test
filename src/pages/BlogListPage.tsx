@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Search, Filter, Heart, Eye, MessageCircle, Calendar, User, Plus, Trash2, Edit, BookOpen } from 'lucide-react';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { fetchBlogs } from '../store/slice/blogSlice';
 
 
 interface BlogFilters {
@@ -114,7 +116,10 @@ const mockActions = {
 };
 
 const BlogPage = () => {
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
+  const blogList = useAppSelector(state => state.blogs)
+
+  console.log(blogList)
   
   // In a real app, these would come from useSelector
   const [state, setState] = useState(mockInitialState);
@@ -145,14 +150,17 @@ const BlogPage = () => {
     console.log('Searching with filters:', filters);
   };
   
-  const formatDate = (dateString: string): string => {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  });
-};
+  const formatDate = (date: Date | string) => {
+    const parsedDate = new Date(date);
+    if (isNaN(parsedDate.getTime())) {
+      return 'Invalid Date';
+    }
+    return new Intl.DateTimeFormat('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    }).format(parsedDate);
+  };
 
 
 const toggleTag = (tag: string): void => {
@@ -162,8 +170,11 @@ const toggleTag = (tag: string): void => {
 };
 
   useEffect(() => {
-    handleSearch();
-  }, []);
+    //handleSearch();
+
+    dispatch(fetchBlogs())
+
+  }, [dispatch]);
 
   if (isLoading) {
     return (
@@ -290,29 +301,25 @@ const toggleTag = (tag: string): void => {
 
         {/* Blog Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {blogs.map(blog => (
+          {blogList.blogs.map(blog => (
             <article
               key={blog.id}
               className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow overflow-hidden border"
             >
-              {blog.featured && (
-                <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-1 text-xs font-medium">
-                  FEATURED
-                </div>
-              )}
+              
               
               <div className="p-6">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center space-x-2">
-                    <img
+                    {/* <img
                       src={blog.author.avatar}
                       alt={blog.author.name}
                       className="h-6 w-6 rounded-full"
-                    />
-                    <span className="text-sm text-gray-600">{blog.author.name}</span>
+                    /> */}
+                    <span className="text-sm text-gray-600">{blog.authorId}</span>
                   </div>
                   
-                  {isAuthenticated && user.id === blog.author.id && (
+                  {isAuthenticated && user.id === blog.authorId && (
                     <div className="flex space-x-1">
                       <button className="p-1 text-gray-400 hover:text-blue-600 transition-colors">
                         <Edit className="h-4 w-4" />
@@ -355,10 +362,7 @@ const toggleTag = (tag: string): void => {
 
                 <div className="flex items-center justify-between pt-4 border-t border-gray-100">
                   <div className="flex items-center space-x-4 text-sm text-gray-500">
-                    <span className="flex items-center space-x-1">
-                      <Eye className="h-4 w-4" />
-                      <span>{blog.views}</span>
-                    </span>
+                   
                     <span className="flex items-center space-x-1">
                       <MessageCircle className="h-4 w-4" />
                       <span>{blog.commentCount}</span>

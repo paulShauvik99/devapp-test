@@ -28,6 +28,7 @@ interface BlogState {
   isLoading: boolean;
   isCreating: boolean;
   isUpdating: boolean;
+  isCreatingComment: boolean;
   error: string | null;
 }
 
@@ -54,6 +55,7 @@ const initialState: BlogState = {
   isLoading: false,
   isCreating: false,
   isUpdating: false,
+  isCreatingComment: false,
   error: null,
 };
 
@@ -84,26 +86,12 @@ export const fetchBlogs = createAsyncThunk<
   }
 );
 
-// 1. Fetch all blogs (default page 1, limit 10):
-
-// dispatch(fetchBlogs());
-// 2. Fetch blogs with filters:
-
-// dispatch(fetchBlogs({
-//   page: 2,
-//   limit: 5,
-//   tags: ['react', 'javascript'],
-//   search: 'hooks',
-//   authorId: 'u1',
-//   isPublished: true,
-// }));
-
 export const fetchBlogById = createAsyncThunk<Blog, string>(
   'blogs/fetchBlogById',
   async (blogId, { rejectWithValue }) => {
     try {
       const response = await axios.get(`/api/blogs/${blogId}`);
-      return response.data;
+      return response.data.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Blog not found');
     }
@@ -176,9 +164,20 @@ export const likeBlog = createAsyncThunk<
   }
 );
 
-
-
-
+export const createComment = createAsyncThunk<
+  { blogId: string; comment: Comment },
+  { blogId: string; commentData: Omit<Comment, 'id' | 'createdAt' | 'replies' | 'replyCount' | 'likes'> }
+>(
+  'blogs/createComment',
+  async ({ blogId, commentData }, { rejectWithValue }) => {
+    try {
+      const response = await axios.post(`/api/blogs/${blogId}/comments`, commentData);
+      return { blogId, comment: response.data.data };
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to create comment');
+    }
+  }
+);
 
 const blogSlice = createSlice({
   name: 'blogs',
@@ -308,7 +307,31 @@ const blogSlice = createSlice({
           state.blogs[blogIndex].likes = likes;
         }
       })
-
+      // Create comment
+      .addCase(createComment.pending, (state) => {
+        state.isCreatingComment = true;
+        state.error = null;
+      })
+      .addCase(createComment.fulfilled, (state, action) => {
+        state.isCreatingComment = false;
+        const { blogId, comment } = action.payload;
+        
+        // Update current blog if it matches
+        if (state.currentBlog && state.currentBlog.id === blogId) {
+          state.currentBlog.comments.push(comment);
+          state.currentBlog.commentCount += 1;
+        }
+        
+        // Update blog in blogs array
+        const blogIndex = state.blogs.findIndex(blog => blog.id === blogId);
+        if (blogIndex !== -1) {
+          state.blogs[blogIndex].commentCount += 1;
+        }
+      })
+      .addCase(createComment.rejected, (state, action) => {
+        state.isCreatingComment = false;
+        state.error = action.payload as string;
+      })
   },
 });
 
